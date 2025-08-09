@@ -1,15 +1,13 @@
-use axum::{
-    Json, Router,
-    http::StatusCode,
-    routing::{get, post},
-};
-use serde::{Deserialize, Serialize};
+use axum::Router;
 use sqlx::postgres::PgPoolOptions;
-use std::env;
 
 use crate::config::Config;
 
 mod config;
+mod db;
+mod handlers;
+mod models;
+mod routes;
 
 #[tokio::main]
 async fn main() {
@@ -31,50 +29,13 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
-    // build our application with a route
-    let app = Router::new()
-        // `GET /` goes to `root`
-        .route("/", get(root))
-        // `POST /users` goes to `create_user`
-        .route("/users", post(create_user));
+    let app = Router::new().nest(
+        "/users",
+        routes::users::users_router(db::Database::new(pool)),
+    );
 
-    // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
         .await
         .expect("Failed to bind TCP listener");
     axum::serve(listener, app).await.unwrap();
-}
-
-// basic handler that responds with a static string
-async fn root() -> String {
-    env::var("DATABASE_URL").expect("URL MUST BE DEFINED!")
-}
-
-async fn create_user(
-    // this argument tells axum to parse the request body
-    // as JSON into a `CreateUser` type
-    Json(payload): Json<CreateUser>,
-) -> (StatusCode, Json<User>) {
-    // insert your application logic here
-    let user = User {
-        id: 1337,
-        username: payload.username,
-    };
-
-    // this will be converted into a JSON response
-    // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
-}
-
-// the input to our `create_user` handler
-#[derive(Deserialize)]
-struct CreateUser {
-    username: String,
-}
-
-// the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    username: String,
 }
