@@ -1,6 +1,16 @@
 use crate::{db::Database, models::users::User};
 use axum::{Json, extract::State, http::StatusCode};
 
+#[utoipa::path(
+    get,
+    path = "/users/{id}",
+    responses(
+        (status = 200, description = "Success", body = User),
+        (status = 404, description = "Not Found", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "users"
+)]
 pub async fn get_user(
     State(db): State<Database>,
     path: axum::extract::Path<i32>,
@@ -14,6 +24,16 @@ pub async fn get_user(
         })
 }
 
+#[utoipa::path(
+    delete,
+    path = "/users/{id}",
+    responses(
+        (status = 204, description = "No Content"),
+        (status = 404, description = "Not Found", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "users"
+)]
 pub async fn delete_user(
     State(db): State<Database>,
     path: axum::extract::Path<i32>,

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use validator::Validate;
+use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -8,14 +9,14 @@ pub struct Claims {
     pub exp: usize, // Expiration time
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct LoginRequest {
     #[validate(email)]
     pub email: String,
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct AuthResponse {
     pub token: String,
     pub user_id: i64,
@@ -27,7 +28,7 @@ pub struct PasswordHash {
     pub password_hash: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct RegisterUser {
     #[validate(length(
         min = 3,

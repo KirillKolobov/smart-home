@@ -9,6 +9,17 @@ use axum::{Json, extract::State, http::StatusCode};
 use bcrypt::{DEFAULT_COST, hash};
 use validator::Validate;
 
+#[utoipa::path(
+    post,
+    path = "/login",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "Success", body = AuthResponse),
+        (status = 401, description = "Unauthorized", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "auth"
+)]
 pub async fn login(
     State(state): State<AuthRouterState>,
     Json(payload): Json<LoginRequest>,
@@ -21,6 +32,17 @@ pub async fn login(
         .map_err(|e| (StatusCode::UNAUTHORIZED, e))
 }
 
+#[utoipa::path(
+    post,
+    path = "/register",
+    request_body = RegisterUser,
+    responses(
+        (status = 201, description = "Success", body = User),
+        (status = 400, description = "Bad Request", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "auth"
+)]
 pub async fn register(
     State(state): State<AuthRouterState>,
     Json(payload): Json<RegisterUser>,

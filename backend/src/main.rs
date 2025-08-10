@@ -1,8 +1,14 @@
 use axum::{Router, middleware};
 use sqlx::postgres::PgPoolOptions;
+use utoipa::OpenApi;
 
-use crate::{config::Config, middlewares::auth::auth_middleware, routes::auth::auth_router};
+use crate::{
+    api_doc::ApiDoc, config::Config, middlewares::auth::auth_middleware, routes::auth::auth_router,
+};
 
+use utoipa_swagger_ui::SwaggerUi;
+
+pub mod api_doc;
 mod config;
 mod db;
 mod handlers;
@@ -50,6 +56,7 @@ async fn main() {
         ));
 
     let app = Router::new()
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .merge(auth_router(app_state.clone()))
         .merge(private_routes);
 
