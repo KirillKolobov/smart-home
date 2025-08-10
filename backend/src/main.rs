@@ -1,13 +1,21 @@
-use axum::Router;
+use axum::{Router, middleware};
 use sqlx::postgres::PgPoolOptions;
 
-use crate::config::Config;
+use crate::{config::Config, middlewares::auth::auth_middleware, routes::auth::auth_router};
 
 mod config;
 mod db;
 mod handlers;
+mod middlewares;
 mod models;
 mod routes;
+mod services;
+
+#[derive(Clone)]
+pub struct AppState {
+    db: db::Database,
+    config: Config,
+}
 
 #[tokio::main]
 async fn main() {
@@ -29,10 +37,21 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
-    let app = Router::new().nest(
-        "/users",
-        routes::users::users_router(db::Database::new(pool)),
-    );
+    let app_state = AppState {
+        db: db::Database::new(pool.clone()),
+        config: config.clone(),
+    };
+
+    let private_routes = Router::new()
+        .nest("/users", routes::users::users_router(app_state.clone()))
+        .route_layer(middleware::from_fn_with_state(
+            app_state.clone(),
+            auth_middleware,
+        ));
+
+    let app = Router::new()
+        .merge(auth_router(app_state.clone()))
+        .merge(private_routes);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
         .await

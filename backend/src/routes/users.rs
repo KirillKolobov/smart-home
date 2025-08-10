@@ -1,13 +1,15 @@
 use crate::{
-    db::Database,
-    handlers::users::{create_user, get_user, delete_user},
+    AppState,
+    handlers::users::{delete_user, get_user},
 };
-use axum::{routing::{delete, get, post}, Router};
+use axum::{
+    Router,
+    routing::{delete, get},
+};
 
-pub fn users_router(db: Database) -> Router {
+pub fn users_router(app_state: AppState) -> Router {
     Router::new()
-        .route("/", post(create_user))
         .route("/{id}", get(get_user))
         .route("/{id}", delete(delete_user))
-        .with_state(db)
+        .with_state(app_state.db)
 }

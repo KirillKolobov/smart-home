@@ -10,6 +10,8 @@ pub struct Config {
     pub db_port: u16,
     pub db_user: String,
     pub db_pass: String,
+    pub jwt_secret: String,
+    pub jwt_expires_in: u64,
 }
 
 impl Config {
@@ -27,6 +29,11 @@ impl Config {
         let db_name = env::var("DB_NAME").expect("DB_NAME must be defined in .env");
         let db_user = env::var("DB_USER").expect("DB_USER must be defined in .env");
         let db_pass = env::var("DB_PASSWORD").expect("DB_PASSWORD must be defined in .env");
+        let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be defined in .env");
+        let jwt_expires_in = env::var("JWT_EXPIRES_IN")
+            .expect("JWT_EXPIRES_IN must be defined in .env")
+            .parse::<u64>()
+            .expect("JWT_EXPIRES_IN must be a valid number");
 
         Self {
             port,
@@ -35,6 +42,8 @@ impl Config {
             db_port,
             db_user,
             db_pass,
+            jwt_secret,
+            jwt_expires_in,
         }
     }
 }
