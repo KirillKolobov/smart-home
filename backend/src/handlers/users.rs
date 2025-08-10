@@ -1,25 +1,5 @@
-use crate::{
-    db::Database,
-    models::users::{CreateUser, User},
-};
+use crate::{db::Database, models::users::User};
 use axum::{Json, extract::State, http::StatusCode};
-use validator::Validate;
-
-pub async fn create_user(
-    State(db): State<Database>,
-    Json(payload): Json<CreateUser>,
-) -> Result<(StatusCode, Json<User>), (StatusCode, String)> {
-    payload
-        .validate()
-        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Validation error: {}", e)))?;
-
-    db.create_user(payload)
-        .await
-        .map(|user| (StatusCode::CREATED, Json(user)))
-        .map_err(|e| match e {
-            _ => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
-        })
-}
 
 pub async fn get_user(
     State(db): State<Database>,

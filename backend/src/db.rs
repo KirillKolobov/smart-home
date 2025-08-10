@@ -1,6 +1,9 @@
 use sqlx::PgPool;
 
-use crate::models::users::{CreateUser, User};
+use crate::models::{
+    auth::{PasswordHash, RegisterUser},
+    users::User,
+};
 
 #[derive(Clone)]
 pub struct Database {
@@ -12,7 +15,7 @@ impl Database {
         Self { pool }
     }
 
-    pub async fn create_user(&self, user: CreateUser) -> Result<User, sqlx::Error> {
+    pub async fn create_user(&self, user: RegisterUser) -> Result<User, sqlx::Error> {
         sqlx::query_as!(
             User,
             r#"
@@ -59,5 +62,18 @@ impl Database {
         }
 
         Ok(())
+    }
+
+    pub async fn get_password_hash_by_email(
+        &self,
+        email: &str,
+    ) -> Result<PasswordHash, sqlx::Error> {
+        sqlx::query_as!(
+            PasswordHash,
+            "SELECT id, password_hash FROM users WHERE email = $1",
+            email
+        )
+        .fetch_one(&self.pool)
+        .await
     }
 }
