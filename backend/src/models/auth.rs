@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
-use validator::Validate;
 use utoipa::ToSchema;
+use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -33,9 +33,17 @@ pub struct RegisterUser {
     #[validate(length(
         min = 3,
         max = 25,
-        message = "Username must be between 3 and 25 characters"
+        message = "First name must be between 3 and 25 characters"
     ))]
-    pub username: String,
+    pub first_name: String,
+    #[validate(length(
+        min = 3,
+        max = 25,
+        message = "Last name must be between 3 and 25 characters"
+    ))]
+    pub last_name: String,
+    #[validate(length(min = 10, max = 15, message = "Invalid phone number"))]
+    pub phone: String,
     #[validate(email(message = "Must be a valid email address"))]
     pub email: String,
     #[validate(length(
