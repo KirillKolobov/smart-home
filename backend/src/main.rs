@@ -1,67 +1,64 @@
-use axum::{Router, middleware};
-use sqlx::postgres::PgPoolOptions;
-use utoipa::OpenApi;
+//! Smart Home Backend - Main Application Entry Point
 
-use crate::{
-    api_doc::ApiDoc, config::Config, middlewares::auth::auth_middleware, routes::auth::auth_router,
+use smart_home_backend::{
+    config::Config, create_app, create_database_pool, db::Database, init_tracing, run_migrations,
+    AppState,
 };
-
-use utoipa_swagger_ui::SwaggerUi;
-
-pub mod api_doc;
-mod config;
-mod db;
-mod handlers;
-mod middlewares;
-mod models;
-mod routes;
-mod services;
-
-#[derive(Clone)]
-pub struct AppState {
-    db: db::Database,
-    config: Config,
-}
+use tracing::{error, info};
 
 #[tokio::main]
-async fn main() {
-    // initialize tracing
-    tracing_subscriber::fmt::init();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize tracing
+    init_tracing();
+    info!("Starting Smart Home Backend");
+
+    // Load configuration
     let config = Config::from_env();
-    let connection_string = format!(
-        "postgres://{user}:{password}@{host}:{port}/{dbname}?sslmode=disable",
-        user = config.db_user,
-        password = config.db_pass,
-        host = config.db_host,
-        port = config.db_port,
-        dbname = config.db_name
+    info!("Configuration loaded successfully");
+
+    // Create database connection pool
+    let pool = create_database_pool(&config).await.map_err(|e| {
+        error!("Failed to connect to database: {}", e);
+        e
+    })?;
+
+    info!("Database connection established");
+
+    // Run migrations
+    run_migrations(&pool).await.map_err(|e| {
+        error!("Failed to run migrations: {}", e);
+        e
+    })?;
+
+    info!("Database migrations completed successfully");
+
+    // Create application state
+    let app_state = AppState::new(Database::new(pool), config.clone());
+
+    // Create application router
+    let app = create_app(app_state);
+
+    // Start server
+    let listener_address = format!("0.0.0.0:{}", config.port);
+    info!("Starting server on {}", listener_address);
+
+    let listener = tokio::net::TcpListener::bind(&listener_address)
+        .await
+        .map_err(|e| {
+            error!("Failed to bind TCP listener: {}", e);
+            e
+        })?;
+
+    info!("Smart Home Backend is running on {}", listener_address);
+    info!(
+        "Swagger UI available at: http://{}/swagger-ui",
+        listener_address
     );
 
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&connection_string)
-        .await
-        .expect("Failed to connect to database");
+    axum::serve(listener, app).await.map_err(|e| {
+        error!("Server error: {}", e);
+        e
+    })?;
 
-    let app_state = AppState {
-        db: db::Database::new(pool.clone()),
-        config: config.clone(),
-    };
-
-    let private_routes = Router::new()
-        .nest("/users", routes::users::users_router(app_state.clone()))
-        .route_layer(middleware::from_fn_with_state(
-            app_state.clone(),
-            auth_middleware,
-        ));
-
-    let app = Router::new()
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        .merge(auth_router(app_state.clone()))
-        .merge(private_routes);
-
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port))
-        .await
-        .expect("Failed to bind TCP listener");
-    axum::serve(listener, app).await.unwrap();
+    Ok(())
 }

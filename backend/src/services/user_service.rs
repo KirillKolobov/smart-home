@@ -1,118 +1,87 @@
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    Json,
-};
+use std::sync::Arc;
+
+use async_trait::async_trait;
+use mockall::automock;
 use tracing::info;
 
 use crate::{
     errors::Result,
     models::users::{User, UserProfile},
-    routes::users::UserRouterState,
-    services::UserServiceTrait,
+    repositories::UserRepositoryTrait,
 };
 
-/// Get user by ID endpoint
-///
-/// Retrieves basic user information by user ID.
-#[utoipa::path(
-    get,
-    path = "/users/{id}",
-    params(
-        ("id" = i64, Path, description = "User ID")
-    ),
-    responses(
-        (status = 200, description = "User found", body = User),
-        (status = 404, description = "User not found", body = String),
-        (status = 500, description = "Internal Server Error", body = String)
-    ),
-    tag = "users"
-)]
-pub async fn get_user(
-    State(state): State<UserRouterState>,
-    Path(user_id): Path<i64>,
-) -> Result<Json<User>> {
-    info!("Get user request for ID: {}", user_id);
-
-    let user = state.user_service.get_user_by_id(user_id).await?;
-
-    info!("Successfully retrieved user: {}", user.id);
-    Ok(Json(user))
+#[automock]
+#[async_trait]
+pub trait UserServiceTrait {
+    async fn get_user_by_id(&self, id: i64) -> Result<User>;
+    async fn get_user_profile(&self, id: i64) -> Result<UserProfile>;
+    async fn delete_user(&self, id: i64) -> Result<()>;
+    async fn user_exists(&self, email: &str) -> Result<bool>;
 }
 
-/// Get user profile by ID endpoint
-///
-/// Retrieves detailed user profile information by user ID.
-#[utoipa::path(
-    get,
-    path = "/users/{id}/profile",
-    params(
-        ("id" = i64, Path, description = "User ID")
-    ),
-    responses(
-        (status = 200, description = "User profile found", body = UserProfile),
-        (status = 404, description = "User not found", body = String),
-        (status = 500, description = "Internal Server Error", body = String)
-    ),
-    tag = "users"
-)]
-pub async fn get_user_profile(
-    State(state): State<UserRouterState>,
-    Path(user_id): Path<i64>,
-) -> Result<Json<UserProfile>> {
-    info!("Get user profile request for ID: {}", user_id);
-
-    let profile = state.user_service.get_user_profile(user_id).await?;
-
-    info!("Successfully retrieved user profile: {}", profile.id);
-    Ok(Json(profile))
+#[derive(Clone)]
+pub struct UserService {
+    user_repository: Arc<dyn UserRepositoryTrait + Send + Sync>,
 }
 
-/// Delete user by ID endpoint
-///
-/// Deletes a user by their ID. This is a destructive operation.
-#[utoipa::path(
-    delete,
-    path = "/users/{id}",
-    params(
-        ("id" = i64, Path, description = "User ID")
-    ),
-    responses(
-        (status = 204, description = "User deleted successfully"),
-        (status = 404, description = "User not found", body = String),
-        (status = 500, description = "Internal Server Error", body = String)
-    ),
-    tag = "users"
-)]
-pub async fn delete_user(
-    State(state): State<UserRouterState>,
-    Path(user_id): Path<i64>,
-) -> Result<StatusCode> {
-    info!("Delete user request for ID: {}", user_id);
+impl UserService {
+    pub fn new(user_repository: Arc<dyn UserRepositoryTrait + Send + Sync>) -> Self {
+        Self { user_repository }
+    }
+}
 
-    state.user_service.delete_user(user_id).await?;
+#[async_trait]
+impl UserServiceTrait for UserService {
+    async fn get_user_by_id(&self, id: i64) -> Result<User> {
+        info!("Fetching user with ID: {}", id);
 
-    info!("Successfully deleted user with ID: {}", user_id);
-    Ok(StatusCode::NO_CONTENT)
+        let user_entity = self.user_repository.get_user_by_id(id).await?;
+        let user = User::from(user_entity);
+
+        info!("Successfully fetched user: {}", user.id);
+        Ok(user)
+    }
+
+    async fn get_user_profile(&self, id: i64) -> Result<UserProfile> {
+        info!("Fetching user profile with ID: {}", id);
+
+        let user_entity = self.user_repository.get_user_by_id(id).await?;
+        let profile = UserProfile::from(user_entity);
+
+        info!("Successfully fetched user profile: {}", profile.id);
+        Ok(profile)
+    }
+
+    async fn delete_user(&self, id: i64) -> Result<()> {
+        info!("Attempting to delete user with ID: {}", id);
+
+        // Check if user exists first
+        self.user_repository.get_user_by_id(id).await?;
+
+        // Delete the user
+        self.user_repository.delete_user(id).await?;
+
+        info!("Successfully deleted user with ID: {}", id);
+        Ok(())
+    }
+
+    async fn user_exists(&self, email: &str) -> Result<bool> {
+        self.user_repository.user_exists_by_email(email).await
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use super::*;
     use crate::{
         errors::AppError,
         models::users::{UserEntity, UserRole},
         repositories::user_repository::MockUserRepositoryTrait,
-        routes::users::UserRouterState,
-        services::user_service::UserService,
     };
-    use axum::extract::{Path, State};
     use chrono::Utc;
 
     #[tokio::test]
-    async fn test_get_user_success() {
+    async fn test_get_user_by_id_success() {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
         let user_entity = UserEntity {
@@ -134,12 +103,10 @@ mod tests {
             .returning(move |_| Ok(user_entity.clone()));
 
         let user_service = UserService::new(Arc::new(mock_repo));
-        let state = UserRouterState { user_service };
-
-        let result = get_user(State(state), Path(1)).await;
+        let result = user_service.get_user_by_id(1).await;
 
         assert!(result.is_ok());
-        let Json(user) = result.unwrap();
+        let user = result.unwrap();
         assert_eq!(user.id, 1);
         assert_eq!(user.first_name, "John");
         assert_eq!(user.last_name, "Doe");
@@ -148,7 +115,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_user_not_found() {
+    async fn test_get_user_by_id_not_found() {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
         mock_repo
@@ -158,9 +125,7 @@ mod tests {
             .returning(|_| Err(AppError::NotFound("User not found".to_string())));
 
         let user_service = UserService::new(Arc::new(mock_repo));
-        let state = UserRouterState { user_service };
-
-        let result = get_user(State(state), Path(999)).await;
+        let result = user_service.get_user_by_id(999).await;
 
         assert!(result.is_err());
         match result.unwrap_err() {
@@ -193,12 +158,10 @@ mod tests {
             .returning(move |_| Ok(user_entity.clone()));
 
         let user_service = UserService::new(Arc::new(mock_repo));
-        let state = UserRouterState { user_service };
-
-        let result = get_user_profile(State(state), Path(1)).await;
+        let result = user_service.get_user_profile(1).await;
 
         assert!(result.is_ok());
-        let Json(profile) = result.unwrap();
+        let profile = result.unwrap();
         assert_eq!(profile.id, 1);
         assert_eq!(profile.first_name, "John");
         assert_eq!(profile.last_name, "Doe");
@@ -237,12 +200,9 @@ mod tests {
             .returning(|_| Ok(()));
 
         let user_service = UserService::new(Arc::new(mock_repo));
-        let state = UserRouterState { user_service };
-
-        let result = delete_user(State(state), Path(1)).await;
+        let result = user_service.delete_user(1).await;
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), StatusCode::NO_CONTENT);
     }
 
     #[tokio::test]
@@ -256,14 +216,46 @@ mod tests {
             .returning(|_| Err(AppError::NotFound("User not found".to_string())));
 
         let user_service = UserService::new(Arc::new(mock_repo));
-        let state = UserRouterState { user_service };
-
-        let result = delete_user(State(state), Path(999)).await;
+        let result = user_service.delete_user(999).await;
 
         assert!(result.is_err());
         match result.unwrap_err() {
             AppError::NotFound(_) => (),
             _ => panic!("Expected NotFound error"),
         }
+    }
+
+    #[tokio::test]
+    async fn test_user_exists_true() {
+        let mut mock_repo = MockUserRepositoryTrait::new();
+
+        mock_repo
+            .expect_user_exists_by_email()
+            .with(mockall::predicate::eq("existing@example.com"))
+            .times(1)
+            .returning(|_| Ok(true));
+
+        let user_service = UserService::new(Arc::new(mock_repo));
+        let result = user_service.user_exists("existing@example.com").await;
+
+        assert!(result.is_ok());
+        assert!(result.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_user_exists_false() {
+        let mut mock_repo = MockUserRepositoryTrait::new();
+
+        mock_repo
+            .expect_user_exists_by_email()
+            .with(mockall::predicate::eq("nonexistent@example.com"))
+            .times(1)
+            .returning(|_| Ok(false));
+
+        let user_service = UserService::new(Arc::new(mock_repo));
+        let result = user_service.user_exists("nonexistent@example.com").await;
+
+        assert!(result.is_ok());
+        assert!(!result.unwrap());
     }
 }

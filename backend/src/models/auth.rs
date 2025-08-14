@@ -22,7 +22,7 @@ pub struct AuthResponse {
     pub user_id: i64,
 }
 
-#[derive(Debug, FromRow)]
+#[derive(Debug, FromRow, Clone)]
 pub struct PasswordHash {
     pub id: i64,
     pub password_hash: String,

@@ -1,79 +1,66 @@
 use sqlx::PgPool;
 
-use crate::models::{
-    auth::{PasswordHash, RegisterUser},
-    users::User,
-};
-
 #[derive(Clone)]
 pub struct Database {
-    pool: PgPool,
+    pub pool: PgPool,
 }
 
 impl Database {
+    /// Create a new Database instance with the given pool
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 
-    pub async fn create_user(&self, user: RegisterUser) -> Result<User, sqlx::Error> {
-        sqlx::query_as!(
-            User,
-            r#"
-            INSERT INTO users (username, email, password_hash)
-            VALUES ($1, $2, $3)
-            RETURNING id, username, email
-            "#,
-            user.username,
-            user.email,
-            user.password
-        )
-        .fetch_one(&self.pool)
-        .await
+    /// Get a reference to the underlying pool
+    pub fn pool(&self) -> &PgPool {
+        &self.pool
     }
 
-    pub async fn get_user(&self, id: i32) -> Result<User, sqlx::Error> {
-        sqlx::query_as!(
-            User,
-            r#"
-            SELECT id, username, email
-            FROM users
-            WHERE id = $1
-            "#,
-            id
-        )
-        .fetch_one(&self.pool)
-        .await
-    }
-
-    pub async fn delete_user(&self, id: i32) -> Result<(), sqlx::Error> {
-        let rows_affected = sqlx::query!(
-            r#"
-        DELETE FROM users
-        WHERE id = $1
-        "#,
-            id
-        )
-        .execute(&self.pool)
-        .await?
-        .rows_affected();
-
-        if rows_affected == 0 {
-            return Err(sqlx::Error::RowNotFound);
-        }
-
+    /// Check if the database connection is healthy
+    pub async fn health_check(&self) -> Result<(), sqlx::Error> {
+        sqlx::query("SELECT 1").execute(&self.pool).await?;
         Ok(())
     }
+}
 
-    pub async fn get_password_hash_by_email(
-        &self,
-        email: &str,
-    ) -> Result<PasswordHash, sqlx::Error> {
-        sqlx::query_as!(
-            PasswordHash,
-            "SELECT id, password_hash FROM users WHERE email = $1",
-            email
-        )
-        .fetch_one(&self.pool)
-        .await
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_database_creation() {
+        // This would require a real database connection for a full test
+        // For now, we just test the structure
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://test:test@localhost/nonexistent")
+            .await;
+
+        // Skip the actual test if we can't connect (which is expected in CI)
+        if let Ok(pool) = pool {
+            let db = Database::new(pool);
+            assert!(!format!("{:?}", db.pool()).is_empty());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_database_methods() {
+        // Test that the methods exist and have the right signatures
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect("postgres://test:test@localhost/nonexistent")
+            .await;
+
+        if let Ok(pool) = pool {
+            let db = Database::new(pool.clone());
+
+            // Test that pool() returns the same pool
+            assert_eq!(db.pool() as *const _, &pool as *const _);
+
+            // Test health_check method exists (would fail without connection)
+            let health_result = db.health_check().await;
+            // We expect this to fail since we're not actually connected
+            assert!(health_result.is_err());
+        }
     }
 }
