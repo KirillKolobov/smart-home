@@ -36,10 +36,7 @@ impl<'r> Decode<'r, Postgres> for UserRole {
         Ok(match s {
             "admin" => UserRole::Admin,
             "user" => UserRole::User,
-            unknown => {
-                tracing::warn!("Unknown role in DB: '{}', defaulting to 'user'", unknown);
-                UserRole::User
-            }
+            _ => UserRole::User,
         })
     }
 }

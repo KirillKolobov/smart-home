@@ -1,5 +1,4 @@
 use axum::{extract::State, http::StatusCode, Json};
-use tracing::{info, warn};
 use validator::Validate;
 
 use crate::{
@@ -31,18 +30,14 @@ pub async fn login(
     State(state): State<AuthRouterState>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>> {
-    info!("Login request received for email: {}", payload.email);
-
     // Validate request payload
-    payload.validate().map_err(|e| {
-        warn!("Login validation failed: {}", e);
-        AppError::ValidationError(format!("Invalid input: {}", e))
-    })?;
+    payload
+        .validate()
+        .map_err(|e| AppError::ValidationError(format!("Invalid input: {}", e)))?;
 
     // Attempt login
     let auth_response = state.auth_service.login(payload).await?;
 
-    info!("Login successful for user ID: {}", auth_response.user_id);
     Ok(Json(auth_response))
 }
 
@@ -64,18 +59,14 @@ pub async fn register(
     State(state): State<AuthRouterState>,
     Json(payload): Json<RegisterUser>,
 ) -> Result<(StatusCode, Json<User>)> {
-    info!("Registration request received for email: {}", payload.email);
-
     // Validate request payload
-    payload.validate().map_err(|e| {
-        warn!("Registration validation failed: {}", e);
-        AppError::ValidationError(format!("Invalid input: {}", e))
-    })?;
+    payload
+        .validate()
+        .map_err(|e| AppError::ValidationError(format!("Invalid input: {}", e)))?;
 
     // Attempt registration
     let user = state.auth_service.register(payload).await?;
 
-    info!("Registration successful for user ID: {}", user.id);
     Ok((StatusCode::CREATED, Json(user)))
 }
 

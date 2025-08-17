@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use mockall::automock;
-use tracing::info;
 
 use crate::{
     errors::Result,
@@ -33,35 +32,26 @@ impl UserService {
 #[async_trait]
 impl UserServiceTrait for UserService {
     async fn get_user_by_id(&self, id: i64) -> Result<User> {
-        info!("Fetching user with ID: {}", id);
-
         let user_entity = self.user_repository.get_user_by_id(id).await?;
         let user = User::from(user_entity);
 
-        info!("Successfully fetched user: {}", user.id);
         Ok(user)
     }
 
     async fn get_user_profile(&self, id: i64) -> Result<UserProfile> {
-        info!("Fetching user profile with ID: {}", id);
-
         let user_entity = self.user_repository.get_user_by_id(id).await?;
         let profile = UserProfile::from(user_entity);
 
-        info!("Successfully fetched user profile: {}", profile.id);
         Ok(profile)
     }
 
     async fn delete_user(&self, id: i64) -> Result<()> {
-        info!("Attempting to delete user with ID: {}", id);
-
         // Check if user exists first
         self.user_repository.get_user_by_id(id).await?;
 
         // Delete the user
         self.user_repository.delete_user(id).await?;
 
-        info!("Successfully deleted user with ID: {}", id);
         Ok(())
     }
 

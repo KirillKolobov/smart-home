@@ -3,7 +3,6 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use tracing::info;
 
 use crate::{
     errors::Result,
@@ -32,11 +31,8 @@ pub async fn get_user(
     State(state): State<UserRouterState>,
     Path(user_id): Path<i64>,
 ) -> Result<Json<User>> {
-    info!("Get user request for ID: {}", user_id);
-
     let user = state.user_service.get_user_by_id(user_id).await?;
 
-    info!("Successfully retrieved user: {}", user.id);
     Ok(Json(user))
 }
 
@@ -60,11 +56,8 @@ pub async fn get_user_profile(
     State(state): State<UserRouterState>,
     Path(user_id): Path<i64>,
 ) -> Result<Json<UserProfile>> {
-    info!("Get user profile request for ID: {}", user_id);
-
     let profile = state.user_service.get_user_profile(user_id).await?;
 
-    info!("Successfully retrieved user profile: {}", profile.id);
     Ok(Json(profile))
 }
 
@@ -88,11 +81,8 @@ pub async fn delete_user(
     State(state): State<UserRouterState>,
     Path(user_id): Path<i64>,
 ) -> Result<StatusCode> {
-    info!("Delete user request for ID: {}", user_id);
-
     state.user_service.delete_user(user_id).await?;
 
-    info!("Successfully deleted user with ID: {}", user_id);
     Ok(StatusCode::NO_CONTENT)
 }
 

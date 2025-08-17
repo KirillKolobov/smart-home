@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::ToSchema;
+use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema, Clone)]
 pub struct House {
@@ -11,8 +12,10 @@ pub struct House {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct NewHouse {
+    #[validate(length(min = 3))]
     pub name: String,
+    #[validate(length(min = 3))]
     pub address: String,
 }

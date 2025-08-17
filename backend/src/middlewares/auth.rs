@@ -6,7 +6,6 @@ use axum::{
     response::Response,
 };
 use jsonwebtoken::{decode, DecodingKey, Validation};
-use tracing::{info, warn};
 
 /// Authentication middleware that validates JWT tokens
 ///
@@ -25,19 +24,14 @@ pub async fn auth_middleware(
         .headers()
         .get("Authorization")
         .and_then(|h| h.to_str().ok())
-        .ok_or_else(|| {
-            warn!("Missing Authorization header");
-            AppError::AuthenticationError("Missing Authorization header".to_string())
-        })?;
+        .ok_or_else(|| AppError::AuthenticationError("Missing Authorization header".to_string()))?;
 
     // Check for Bearer prefix and extract token
     let token = auth_header.strip_prefix("Bearer ").ok_or_else(|| {
-        warn!("Invalid Authorization header format");
         AppError::AuthenticationError("Invalid Authorization header format".to_string())
     })?;
 
     if token.is_empty() {
-        warn!("Empty token provided");
         return Err(AppError::AuthenticationError("Empty token".to_string()));
     }
 
@@ -47,20 +41,17 @@ pub async fn auth_middleware(
         &DecodingKey::from_secret(state.config.jwt_secret.as_ref()),
         &Validation::default(),
     )
-    .map_err(|e| {
-        warn!("Token validation failed: {}", e);
-        match e.kind() {
-            jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
-                AppError::AuthenticationError("Token has expired".to_string())
-            }
-            jsonwebtoken::errors::ErrorKind::InvalidToken => {
-                AppError::AuthenticationError("Invalid token format".to_string())
-            }
-            jsonwebtoken::errors::ErrorKind::InvalidSignature => {
-                AppError::AuthenticationError("Invalid token signature".to_string())
-            }
-            _ => AppError::AuthenticationError("Token validation failed".to_string()),
+    .map_err(|e| match e.kind() {
+        jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
+            AppError::AuthenticationError("Token has expired".to_string())
         }
+        jsonwebtoken::errors::ErrorKind::InvalidToken => {
+            AppError::AuthenticationError("Invalid token format".to_string())
+        }
+        jsonwebtoken::errors::ErrorKind::InvalidSignature => {
+            AppError::AuthenticationError("Invalid token signature".to_string())
+        }
+        _ => AppError::AuthenticationError("Token validation failed".to_string()),
     })?;
 
     let user_id = token_data.claims.sub;
@@ -70,23 +61,16 @@ pub async fn auth_middleware(
 
     match user_repository.get_user_by_id(user_id).await {
         Ok(_) => {
-            info!("Authenticated user ID: {}", user_id);
             // Add user_id to request extensions for use in handlers
             req.extensions_mut().insert(user_id);
             Ok(next.run(req).await)
         }
-        Err(crate::errors::AppError::NotFound(_)) => {
-            warn!("Token valid but user not found: {}", user_id);
-            Err(AppError::AuthenticationError(
-                "User no longer exists".to_string(),
-            ))
-        }
-        Err(e) => {
-            warn!("Database error during user verification: {}", e);
-            Err(AppError::InternalServerError(
-                "User verification failed".to_string(),
-            ))
-        }
+        Err(crate::errors::AppError::NotFound(_)) => Err(AppError::AuthenticationError(
+            "User no longer exists".to_string(),
+        )),
+        Err(_) => Err(AppError::InternalServerError(
+            "User verification failed".to_string(),
+        )),
     }
 }
 

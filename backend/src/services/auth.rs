@@ -5,7 +5,6 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use mockall::automock;
-use tracing::{info, warn};
 use validator::Validate;
 
 use crate::{
@@ -68,52 +67,34 @@ impl AuthServiceTrait for AuthService {
         // Validate input
         login_request.validate()?;
 
-        info!("Login attempt for email: {}", login_request.email);
-
         // Get user password hash
         let password_data = self
             .user_repository
             .get_password_hash_by_email(&login_request.email)
             .await
-            .map_err(|_| {
-                warn!(
-                    "Login failed: user not found for email {}",
-                    login_request.email
-                );
-                AppError::AuthenticationError("Invalid credentials".to_string())
-            })?;
+            .map_err(|_| AppError::AuthenticationError("Invalid credentials".to_string()))?;
 
         // Verify password
         if !self
             .verify_password(&login_request.password, &password_data.password_hash)
             .await?
         {
-            warn!(
-                "Login failed: invalid password for email {}",
-                login_request.email
-            );
             return Err(AppError::AuthenticationError(
                 "Invalid credentials".to_string(),
             ));
         }
 
         // Update last login
-        if let Err(e) = self
+        if let Err(_) = self
             .user_repository
             .update_last_login(password_data.id)
             .await
         {
-            warn!(
-                "Failed to update last login for user {}: {}",
-                password_data.id, e
-            );
             // Don't fail the login for this
         }
 
         // Generate token
         let token = self.generate_token(password_data.id)?;
-
-        info!("Successful login for user ID: {}", password_data.id);
 
         Ok(AuthResponse {
             token,
@@ -124,15 +105,11 @@ impl AuthServiceTrait for AuthService {
     async fn register(&self, mut register_user: RegisterUser) -> Result<User> {
         register_user.validate()?;
 
-        info!("Registration attempt for email: {}", register_user.email);
-
         self.validate_unique_email(&register_user.email).await?;
 
         register_user.password = self.hash_password(&register_user.password).await?;
 
         let user = self.user_repository.create_user(register_user).await?;
-
-        info!("Successful registration for user ID: {}", user.id);
 
         Ok(user)
     }
