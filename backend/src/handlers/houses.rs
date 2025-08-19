@@ -51,9 +51,9 @@ pub async fn get_user_house_by_id(
     State(state): State<HousesRouterState>,
     Path(house_id): Path<i64>,
 ) -> Result<Json<House>> {
-    let user = state.house_service.get_house_by_id(house_id).await?;
+    let house = state.house_service.get_house_by_id(house_id).await?;
 
-    Ok(Json(user))
+    Ok(Json(house))
 }
 
 /// Create house endpoint

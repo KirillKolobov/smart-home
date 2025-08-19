@@ -82,6 +82,10 @@ pub fn create_app(app_state: AppState) -> Router {
     let protected_routes = Router::new()
         .nest("/users", routes::users::users_router(app_state.clone()))
         .nest("/houses", routes::houses::houses_router(app_state.clone()))
+        .nest(
+            "/houses/{house_id}/rooms",
+            routes::rooms::rooms_router(app_state.clone()),
+        )
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),
             middlewares::auth::auth_middleware,

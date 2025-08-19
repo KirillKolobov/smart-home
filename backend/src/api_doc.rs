@@ -3,6 +3,7 @@ use utoipa::OpenApi;
 use crate::models::{
     auth::{AuthResponse, LoginRequest, RegisterUser},
     houses::{House, NewHouse},
+    rooms::{NewRoom, Room},
     users::{User, UserProfile},
 };
 
@@ -17,15 +18,19 @@ use crate::models::{
         crate::handlers::houses::get_user_houses,
         crate::handlers::houses::get_user_house_by_id,
         crate::handlers::houses::create_house,
-        crate::handlers::houses::delete_house
+        crate::handlers::houses::delete_house, 
+        crate::handlers::rooms::get_house_rooms,
+        crate::handlers::rooms::create_room,
+        crate::handlers::rooms::delete_room
     ),
     components(
-        schemas(LoginRequest, AuthResponse, User, UserProfile, RegisterUser, NewHouse, House)
+        schemas(LoginRequest, AuthResponse, User, UserProfile, RegisterUser, NewHouse, House, Room, NewRoom)
     ),
     tags(
         (name = "auth", description = "Authentication endpoints"),
         (name = "users", description = "User management endpoints"),
         (name = "houses", description = "House management endpoints"),
+        (name = "rooms", description = "Room management endpoints"),
         (name = "health", description = "Health check endpoints")
     ),
     info(

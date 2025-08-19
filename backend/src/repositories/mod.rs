@@ -7,3 +7,5 @@ pub mod house_repository;
 pub use house_repository::{HouseRepository, HouseRepositoryTrait};
 
 pub mod user_houses_repository;
+
+pub mod rooms_repository;
