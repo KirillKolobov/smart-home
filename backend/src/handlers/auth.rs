@@ -113,16 +113,14 @@ mod tests {
         mock_repo.expect_update_last_login().returning(|_| Ok(()));
 
         let auth_service = AuthService::new(config.clone(), Arc::new(mock_repo));
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect_lazy("postgres://user:password@localhost/fake_db")
+            .expect("Failed to create lazy pool");
         let state = AuthRouterState {
             auth_service,
             app_state: crate::AppState {
-                db: crate::db::Database::new(
-                    sqlx::postgres::PgPoolOptions::new()
-                        .max_connections(1)
-                        .connect("postgres://test:test@localhost/test")
-                        .await
-                        .unwrap_or_else(|_| panic!("Test database connection failed")),
-                ),
+                db: crate::db::Database::new(pool),
                 config,
             },
         };
@@ -142,16 +140,14 @@ mod tests {
         let config = create_test_config();
 
         let auth_service = AuthService::new(config.clone(), Arc::new(mock_repo));
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect_lazy("postgres://user:password@localhost/fake_db")
+            .expect("Failed to create lazy pool");
         let state = AuthRouterState {
             auth_service,
             app_state: crate::AppState {
-                db: crate::db::Database::new(
-                    sqlx::postgres::PgPoolOptions::new()
-                        .max_connections(1)
-                        .connect("postgres://test:test@localhost/test")
-                        .await
-                        .unwrap_or_else(|_| panic!("Test database connection failed")),
-                ),
+                db: crate::db::Database::new(pool),
                 config,
             },
         };
@@ -192,16 +188,14 @@ mod tests {
             .returning(move |_| Ok(expected_user.clone()));
 
         let auth_service = AuthService::new(config.clone(), Arc::new(mock_repo));
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect_lazy("postgres://user:password@localhost/fake_db")
+            .expect("Failed to create lazy pool");
         let state = AuthRouterState {
             auth_service,
             app_state: crate::AppState {
-                db: crate::db::Database::new(
-                    sqlx::postgres::PgPoolOptions::new()
-                        .max_connections(1)
-                        .connect("postgres://test:test@localhost/test")
-                        .await
-                        .unwrap_or_else(|_| panic!("Test database connection failed")),
-                ),
+                db: crate::db::Database::new(pool),
                 config,
             },
         };
@@ -231,16 +225,14 @@ mod tests {
         let config = create_test_config();
 
         let auth_service = AuthService::new(config.clone(), Arc::new(mock_repo));
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .connect_lazy("postgres://user:password@localhost/fake_db")
+            .expect("Failed to create lazy pool");
         let state = AuthRouterState {
             auth_service,
             app_state: crate::AppState {
-                db: crate::db::Database::new(
-                    sqlx::postgres::PgPoolOptions::new()
-                        .max_connections(1)
-                        .connect("postgres://test:test@localhost/test")
-                        .await
-                        .unwrap_or_else(|_| panic!("Test database connection failed")),
-                ),
+                db: crate::db::Database::new(pool),
                 config,
             },
         };

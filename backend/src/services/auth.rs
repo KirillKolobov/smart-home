@@ -152,6 +152,8 @@ impl AuthServiceTrait for AuthService {
 
 #[cfg(test)]
 mod tests {
+    use mockall::predicate::eq;
+
     use super::*;
     use crate::models::auth::PasswordHash;
     use crate::models::users::{UserEntity, UserRole};
@@ -350,17 +352,36 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_token() {
-        let mock_repo = MockUserRepositoryTrait::new();
+        let mut mock_repo = MockUserRepositoryTrait::new();
+
+        mock_repo
+            .expect_get_user_by_id()
+            .with(eq(1))
+            .times(1)
+            .returning(|_| {
+                Ok(UserEntity {
+                    id: 1,
+                    email: "test@example.com".to_string(),
+                    first_name: "John".to_string(),
+                    last_name: "Doe".to_string(),
+                    phone: "1234567890".to_string(),
+                    role: UserRole::User,
+                    created_at: chrono::Utc::now(),
+                    updated_at: chrono::Utc::now(),
+                    last_login_at: None,
+                })
+            });
+
+        let mock_repo = Arc::new(mock_repo);
+
         let config = create_test_config();
-        let auth_service = AuthService::new(config, Arc::new(mock_repo));
+        let auth_service = AuthService::new(config, mock_repo.clone());
 
         let token = auth_service.generate_token(1).unwrap();
         assert!(!token.is_empty());
 
-        // Verify token can be decoded
         let claims = auth_service.validate_token(&token).await;
-        // This will fail because we don't mock the user lookup, but that's expected
-        assert!(claims.is_err());
+        assert!(claims.is_ok());
     }
 
     #[tokio::test]
