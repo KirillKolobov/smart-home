@@ -12,7 +12,7 @@ pub struct House {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate, PartialEq, Clone)]
 pub struct NewHouse {
     #[validate(length(min = 3))]
     pub name: String,
