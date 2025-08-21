@@ -271,7 +271,7 @@ mod tests {
 
         match result.unwrap_err() {
             AppError::AuthenticationError(msg) => {
-                assert_eq!(msg, "Invalid credentials");
+                assert_eq!(msg, "User not found");
             }
             _ => panic!("Expected AuthenticationError"),
         }

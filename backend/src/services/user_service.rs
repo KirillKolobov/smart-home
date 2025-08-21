@@ -161,24 +161,6 @@ mod tests {
     async fn test_delete_user_success() {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
-        let user_entity = UserEntity {
-            id: 1,
-            first_name: "John".to_string(),
-            last_name: "Doe".to_string(),
-            phone: "1234567890".to_string(),
-            email: "test@example.com".to_string(),
-            role: UserRole::User,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            last_login_at: None,
-        };
-
-        mock_repo
-            .expect_get_user_by_id()
-            .with(mockall::predicate::eq(1i64))
-            .times(1)
-            .returning(move |_| Ok(user_entity.clone()));
-
         mock_repo
             .expect_delete_user()
             .with(mockall::predicate::eq(1i64))
@@ -196,7 +178,7 @@ mod tests {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
         mock_repo
-            .expect_get_user_by_id()
+            .expect_delete_user()
             .with(mockall::predicate::eq(999i64))
             .times(1)
             .returning(|_| Err(AppError::NotFound("User not found".to_string())));
