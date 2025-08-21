@@ -11,23 +11,26 @@ use crate::{
     errors::AppError,
     handlers::rooms::{create_room, delete_room, get_house_rooms},
     repositories::{
-        rooms_repository::RoomsRepository, user_houses_repository::UserHousesRepository,
+        rooms_repository::RoomsRepository,
+        user_houses_repository::UserHousesRepository,
         HouseRepository,
     },
     services::{
-        access_control_service::AccessControlService, house::HouseService, rooms::RoomsService,
+        access_control_service::{self, AccessControlService},
+        house::{self, HouseService},
+        rooms::{self, RoomsService},
     },
     AppState,
 };
 
 #[derive(Clone)]
-pub struct RoomsRouterState {
-    pub house_service: HouseService,
-    pub access_control_service: AccessControlService,
-    pub room_service: RoomsService,
+pub struct RoomsRouterState<R, H, A> {
+    pub room_service: R,
+    pub house_service: H,
+    pub access_control_service: A,
 }
 
-impl RoomsRouterState {
+impl RoomsRouterState<RoomsService, HouseService, AccessControlService> {
     pub fn new(app_state: AppState) -> Self {
         let house_repository = Arc::new(HouseRepository::new(app_state.db.pool.clone()));
         let user_house_repository = Arc::new(UserHousesRepository::new(app_state.db.pool.clone()));
@@ -50,12 +53,17 @@ pub struct HouseAccess {
     pub user_id: i64,
 }
 
-impl FromRequestParts<RoomsRouterState> for HouseAccess {
+impl<R, H, A> FromRequestParts<RoomsRouterState<R, H, A>> for HouseAccess
+where
+    R: rooms::RoomsServiceTrait + Clone + Send + Sync + 'static,
+    H: house::HouseServiceTrait + Clone + Send + Sync + 'static,
+    A: access_control_service::AccessControlServiceTrait + Clone + Send + Sync + 'static,
+{
     type Rejection = AppError;
 
     async fn from_request_parts(
         parts: &mut Parts,
-        state: &RoomsRouterState,
+        state: &RoomsRouterState<R, H, A>,
     ) -> Result<Self, Self::Rejection> {
         let user_id = parts
             .extensions

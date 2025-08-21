@@ -13,7 +13,7 @@ pub struct Room {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate, Clone, PartialEq)]
 pub struct NewRoom {
     #[validate(length(min = 3))]
     pub name: String,

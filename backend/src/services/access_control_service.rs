@@ -1,6 +1,15 @@
 use std::sync::Arc;
 
+use async_trait::async_trait;
+use mockall::automock;
+
 use crate::{errors::AppError, repositories::user_houses_repository::UserHousesRepositoryTrait};
+
+#[automock]
+#[async_trait]
+pub trait AccessControlServiceTrait {
+    async fn validate_house_access(&self, house_id: i64, user_id: i64) -> Result<bool, AppError>;
+}
 
 #[derive(Clone)]
 pub struct AccessControlService {
@@ -11,8 +20,11 @@ impl AccessControlService {
     pub fn new(user_houses_repo: Arc<dyn UserHousesRepositoryTrait + Send + Sync>) -> Self {
         Self { user_houses_repo }
     }
+}
 
-    pub async fn validate_house_access(
+#[async_trait]
+impl AccessControlServiceTrait for AccessControlService {
+    async fn validate_house_access(
         &self,
         house_id: i64,
         user_id: i64,
