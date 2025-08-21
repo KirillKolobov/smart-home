@@ -31,46 +31,35 @@ pub enum AppError {
 #[derive(Serialize)]
 struct ErrorResponse {
     error: String,
-    message: String,
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         tracing::error!("Error occurred: {}", self.to_string());
 
-        let (status, error_type, message) = match self {
+        let (status, message) = match self {
             AppError::DatabaseError(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "database_error",
                 "An internal database error occurred".to_string(),
             ),
-            AppError::ValidationError(msg) => (StatusCode::BAD_REQUEST, "validation_error", msg),
-            AppError::AuthenticationError(msg) => {
-                (StatusCode::UNAUTHORIZED, "authentication_error", msg)
-            }
-            AppError::AuthorizationError(msg) => {
-                (StatusCode::FORBIDDEN, "authorization_error", msg)
-            }
-            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, "not_found", msg),
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "bad_request", msg),
-            AppError::InternalServerError(msg) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "internal_error", msg)
-            }
+            AppError::ValidationError(msg) => (StatusCode::BAD_REQUEST, msg),
+            AppError::AuthenticationError(msg) => (StatusCode::UNAUTHORIZED, msg),
+            AppError::AuthorizationError(msg) => (StatusCode::FORBIDDEN, msg),
+            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
+            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+            AppError::InternalServerError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
             AppError::JwtError(_) => (
                 StatusCode::UNAUTHORIZED,
-                "jwt_error",
                 "Invalid or expired token".to_string(),
             ),
             AppError::BcryptError(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "bcrypt_error",
                 "Password processing error".to_string(),
             ),
         };
 
         let body = Json(ErrorResponse {
-            error: error_type.to_string(),
-            message: message.to_string(),
+            error: message,
         });
 
         (status, body).into_response()
