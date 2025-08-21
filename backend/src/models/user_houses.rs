@@ -4,6 +4,6 @@ use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema, Clone)]
 pub struct UserHouse {
-    pub user_id: i32,
-    pub house_id: i32,
+    pub user_id: i64,
+    pub house_id: i64,
 }

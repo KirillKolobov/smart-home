@@ -1,15 +1,12 @@
-use axum::{extract::State, http::StatusCode, Json};
-use validator::Validate;
-
 use crate::{
-    errors::{AppError, Result},
-    models::{
-        auth::{AuthResponse, LoginRequest, RegisterUser},
-        users::User,
-    },
+    errors::Result,
+    middlewares::validator::ValidatedJson,
+    models::auth::{AuthResponse, LoginRequest, RegisterUser},
+    models::users::User,
     routes::auth::AuthRouterState,
     services::AuthServiceTrait,
 };
+use axum::{extract::State, http::StatusCode, Json};
 
 /// Login endpoint
 ///
@@ -28,13 +25,8 @@ use crate::{
 )]
 pub async fn login(
     State(state): State<AuthRouterState>,
-    Json(payload): Json<LoginRequest>,
+    ValidatedJson(payload): ValidatedJson<LoginRequest>,
 ) -> Result<Json<AuthResponse>> {
-    // Validate request payload
-    payload
-        .validate()
-        .map_err(|e| AppError::ValidationError(format!("Invalid input: {}", e)))?;
-
     // Attempt login
     let auth_response = state.auth_service.login(payload).await?;
 
@@ -57,13 +49,8 @@ pub async fn login(
 )]
 pub async fn register(
     State(state): State<AuthRouterState>,
-    Json(payload): Json<RegisterUser>,
+    ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> Result<(StatusCode, Json<User>)> {
-    // Validate request payload
-    payload
-        .validate()
-        .map_err(|e| AppError::ValidationError(format!("Invalid input: {}", e)))?;
-
     // Attempt registration
     let user = state.auth_service.register(payload).await?;
 
@@ -76,7 +63,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        config::Config, repositories::user_repository::MockUserRepositoryTrait,
+        config::Config, errors::AppError, repositories::user_repository::MockUserRepositoryTrait,
         services::auth::AuthService,
     };
     use axum::{extract::State, http::StatusCode};
@@ -130,7 +117,7 @@ mod tests {
             password: "password123".to_string(),
         };
 
-        let result = login(State(state), Json(login_request)).await;
+        let result = login(State(state), ValidatedJson(login_request)).await;
         assert!(result.is_ok());
     }
 
@@ -157,7 +144,7 @@ mod tests {
             password: "password123".to_string(),
         };
 
-        let result = login(State(state), Json(login_request)).await;
+        let result = login(State(state), ValidatedJson(login_request)).await;
         assert!(result.is_err());
 
         match result.unwrap_err() {
@@ -208,7 +195,7 @@ mod tests {
             password: "password123".to_string(),
         };
 
-        let result = register(State(state), Json(register_request)).await;
+        let result = register(State(state), ValidatedJson(register_request)).await;
         assert!(result.is_ok());
 
         let (status, Json(user)) = result.unwrap();
@@ -245,7 +232,7 @@ mod tests {
             password: "123".to_string(),        // Too short
         };
 
-        let result = register(State(state), Json(register_request)).await;
+        let result = register(State(state), ValidatedJson(register_request)).await;
         assert!(result.is_err());
 
         match result.unwrap_err() {

@@ -19,11 +19,11 @@ impl From<String> for UserRole {
     }
 }
 
-impl ToString for UserRole {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for UserRole {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            UserRole::User => "user".to_string(),
-            UserRole::Admin => "admin".to_string(),
+            UserRole::User => write!(f, "user"),
+            UserRole::Admin => write!(f, "admin"),
         }
     }
 }

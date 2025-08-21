@@ -208,7 +208,7 @@ mod tests {
 
         let user_house = UserHouse {
             user_id: 1,
-            house_id: created_house.id as i32,
+            house_id: created_house.id,
         };
 
         let cloned_created_house = created_house.clone();
