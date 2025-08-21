@@ -1,0 +1,134 @@
+[33mcommit a57a23f8df24429fd425c06f192cb4fa4d5e2ec5[m[33m ([m[1;36mHEAD -> [m[1;32mSH-10[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Thu Aug 14 20:17:24 2025 +0300
+
+    chore: RegisterUser updated
+
+[33mcommit 0974bc5df938dff4f4bf451f5fd7972fd2a95fd6[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Wed Aug 13 22:35:47 2025 +0300
+
+    chore: db updated
+
+[33mcommit 56d0742a34b4b18b9db1c6ab7eae3189c0ccdb87[m
+Merge: ada2ce5 812ca1b
+Author: KirillKolobov <132936790+KirillKolobov@users.noreply.github.com>
+Date:   Sun Aug 10 22:32:12 2025 +0300
+
+    Merge pull request #7 from KirillKolobov/SH-4
+    
+    [SH-4] - configure tests
+
+[33mcommit 812ca1b39f52b01a5b35a267efebe639984f9acb[m[33m ([m[1;31morigin/SH-4[m[33m, [m[1;32mSH-4[m[33m)[m
+Author: KirillKolobov <kirill.rabota.kolobov@gmail.com>
+Date:   Sun Aug 10 22:30:56 2025 +0300
+
+    [SH-4] - configure tests
+
+[33mcommit ada2ce5f7dd5d96fdb8f4c1e6b41272f196d777c[m
+Merge: df8feb1 c7db7e4
+Author: ToropovAlexei <51864365+ToropovAlexei@users.noreply.github.com>
+Date:   Sun Aug 10 20:18:32 2025 +0300
+
+    Merge pull request #6 from KirillKolobov/SH-9
+    
+    [SH-9] - added openapi spec generation
+
+[33mcommit c7db7e48a6e68df458645e0a101c89529b5f164e[m[33m ([m[1;31morigin/SH-9[m[33m)[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Sun Aug 10 20:17:59 2025 +0300
+
+    [SH-9] - added openapi spec generation
+
+[33mcommit df8feb1f6cec15ab3cc1fe8f68f8657335541aa7[m
+Merge: 66ab43a eeb56dd
+Author: ToropovAlexei <51864365+ToropovAlexei@users.noreply.github.com>
+Date:   Sun Aug 10 10:56:52 2025 +0300
+
+    Merge pull request #5 from KirillKolobov/SH-8
+    
+    [SH-8] - basic jwt auth
+
+[33mcommit eeb56dda843fd60c657995114fa4ec477bffdcd8[m[33m ([m[1;31morigin/SH-8[m[33m)[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Sun Aug 10 10:56:08 2025 +0300
+
+    [SH-8] - basic jwt auth
+
+[33mcommit 66ab43a3cb675de34c40b2a77ae783e9b93e77a8[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Sat Aug 9 20:01:39 2025 +0300
+
+    [SH-7] - users CRUD validation
+
+[33mcommit 972d552992ebddc25f9be8778f71dad71c723588[m
+Merge: 6d7d91f b729bb0
+Author: ToropovAlexei <51864365+ToropovAlexei@users.noreply.github.com>
+Date:   Sat Aug 9 09:54:15 2025 +0300
+
+    Merge pull request #4 from KirillKolobov/SH-7
+    
+    [SH-7] - added users CRUD
+
+[33mcommit b729bb079fd6e273a9c387a965834b884bd1cb8a[m[33m ([m[1;31morigin/SH-7[m[33m)[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Sat Aug 9 09:53:40 2025 +0300
+
+    [SH-7] - added users CRUD
+
+[33mcommit 6d7d91f5d9178fac73b97e7d6498fd7fdd313ca1[m
+Merge: 83499d6 be33383
+Author: ToropovAlexei <51864365+ToropovAlexei@users.noreply.github.com>
+Date:   Sat Aug 9 09:51:38 2025 +0300
+
+    Merge pull request #3 from KirillKolobov/SH-6
+    
+    [SH-6] - pg db inited with users table
+
+[33mcommit be33383297bec6cdd8adee8f0b4f05ee6a00db4d[m[33m ([m[1;31morigin/SH-6[m[33m)[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Fri Aug 8 22:36:45 2025 +0300
+
+    [SH-6] - refactoring
+
+[33mcommit c71bf616e48002475ab1753908010ebd1935eeca[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Fri Aug 8 22:15:48 2025 +0300
+
+    [SH-6] - pg db inited with users table
+
+[33mcommit 83499d66e5c683f3d44183d17e8dd5d2955a3f71[m
+Merge: e0eabb8 3a8d715
+Author: ToropovAlexei <51864365+ToropovAlexei@users.noreply.github.com>
+Date:   Fri Aug 8 22:14:04 2025 +0300
+
+    Merge pull request #2 from KirillKolobov/SH-5
+    
+    [SH-5] - backend initialization
+
+[33mcommit 3a8d715811aaf37945073c38c011cea578f85d20[m[33m ([m[1;31morigin/SH-5[m[33m)[m
+Author: ToropovAlexei <henschel37rus@gmail.com>
+Date:   Thu Aug 7 22:34:46 2025 +0300
+
+    [SH-5] - backend initialization
+
+[33mcommit e0eabb84384892cae018e8e67d8d32fbc67d7b07[m
+Merge: 467be49 7348c5f
+Author: KirillKolobov <132936790+KirillKolobov@users.noreply.github.com>
+Date:   Thu Aug 7 22:13:40 2025 +0300
+
+    Merge pull request #1 from KirillKolobov/SH-2
+    
+    [SH-2] - frontend project initialization
+
+[33mcommit 7348c5f951a5b39a50af26ec0c5e6f314ab2691c[m[33m ([m[1;31morigin/SH-2[m[33m, [m[1;32mSH-2[m[33m)[m
+Author: KirillKolobov <kirill.rabota.kolobov@gmail.com>
+Date:   Thu Aug 7 22:09:59 2025 +0300
+
+    [SH-2] - frontend project initialization
+
+[33mcommit 467be490ca5a35f27fcef2a28734fb6e778e6eda[m
+Author: KirillKolobov <132936790+KirillKolobov@users.noreply.github.com>
+Date:   Thu Aug 7 21:17:22 2025 +0300
+
+    Initial commit
