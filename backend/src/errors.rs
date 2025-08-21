@@ -4,19 +4,28 @@ use axum::{
     Json,
 };
 use serde::Serialize;
-use std::fmt;
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum AppError {
-    DatabaseError(sqlx::Error),
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] sqlx::Error),
+    #[error("Validation error: {0}")]
     ValidationError(String),
+    #[error("Authentication error: {0}")]
     AuthenticationError(String),
+    #[error("Authorization error: {0}")]
     AuthorizationError(String),
+    #[error("Not found: {0}")]
     NotFound(String),
+    #[error("Bad request: {0}")]
     BadRequest(String),
+    #[error("Internal server error: {0}")]
     InternalServerError(String),
-    JwtError(jsonwebtoken::errors::Error),
-    BcryptError(bcrypt::BcryptError),
+    #[error("JWT error: {0}")]
+    JwtError(#[from] jsonwebtoken::errors::Error),
+    #[error("Bcrypt error: {0}")]
+    BcryptError(#[from] bcrypt::BcryptError),
 }
 
 #[derive(Serialize)]
@@ -25,27 +34,9 @@ struct ErrorResponse {
     message: String,
 }
 
-impl fmt::Display for AppError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            AppError::DatabaseError(e) => write!(f, "Database error: {}", e),
-            AppError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
-            AppError::AuthenticationError(msg) => write!(f, "Authentication error: {}", msg),
-            AppError::AuthorizationError(msg) => write!(f, "Authorization error: {}", msg),
-            AppError::NotFound(msg) => write!(f, "Not found: {}", msg),
-            AppError::BadRequest(msg) => write!(f, "Bad request: {}", msg),
-            AppError::InternalServerError(msg) => write!(f, "Internal server error: {}", msg),
-            AppError::JwtError(e) => write!(f, "JWT error: {}", e),
-            AppError::BcryptError(e) => write!(f, "Bcrypt error: {}", e),
-        }
-    }
-}
-
-impl std::error::Error for AppError {}
-
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        tracing::error!("Error occurred: {}", self);
+        tracing::error!("Error occurred: {}", self.to_string());
 
         let (status, error_type, message) = match self {
             AppError::DatabaseError(_) => (
@@ -83,27 +74,6 @@ impl IntoResponse for AppError {
         });
 
         (status, body).into_response()
-    }
-}
-
-impl From<sqlx::Error> for AppError {
-    fn from(err: sqlx::Error) -> Self {
-        match err {
-            sqlx::Error::RowNotFound => AppError::NotFound("Resource not found".to_string()),
-            _ => AppError::DatabaseError(err),
-        }
-    }
-}
-
-impl From<jsonwebtoken::errors::Error> for AppError {
-    fn from(err: jsonwebtoken::errors::Error) -> Self {
-        AppError::JwtError(err)
-    }
-}
-
-impl From<bcrypt::BcryptError> for AppError {
-    fn from(err: bcrypt::BcryptError) -> Self {
-        AppError::BcryptError(err)
     }
 }
 

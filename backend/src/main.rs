@@ -1,13 +1,14 @@
 //! Smart Home Backend - Main Application Entry Point
 
+use anyhow::Context;
 use smart_home_backend::{
     config::Config, create_app, create_database_pool, db::Database, init_tracing, run_migrations,
     AppState,
 };
-use tracing::{error, info};
+use tracing::info;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> anyhow::Result<()> {
     // Initialize tracing
     init_tracing();
     info!("Starting Smart Home Backend");
@@ -17,18 +18,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Configuration loaded successfully");
 
     // Create database connection pool
-    let pool = create_database_pool(&config).await.map_err(|e| {
-        error!("Failed to connect to database: {}", e);
-        e
-    })?;
+    let pool = create_database_pool(&config)
+        .await
+        .context("Failed to connect to database")?;
 
     info!("Database connection established");
 
     // Run migrations
-    run_migrations(&pool).await.map_err(|e| {
-        error!("Failed to run migrations: {}", e);
-        e
-    })?;
+    run_migrations(&pool)
+        .await
+        .context("Failed to run migrations")?;
 
     info!("Database migrations completed successfully");
 
@@ -44,10 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let listener = tokio::net::TcpListener::bind(&listener_address)
         .await
-        .map_err(|e| {
-            error!("Failed to bind TCP listener: {}", e);
-            e
-        })?;
+        .context("Failed to bind TCP listener")?;
 
     info!("Smart Home Backend is running on {}", listener_address);
     info!(
@@ -55,10 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         listener_address
     );
 
-    axum::serve(listener, app).await.map_err(|e| {
-        error!("Server error: {}", e);
-        e
-    })?;
+    axum::serve(listener, app).await.context("Server error")?;
 
     Ok(())
 }

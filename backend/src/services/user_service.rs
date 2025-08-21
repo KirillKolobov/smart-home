@@ -46,10 +46,6 @@ impl UserServiceTrait for UserService {
     }
 
     async fn delete_user(&self, id: i64) -> Result<()> {
-        // Check if user exists first
-        self.user_repository.get_user_by_id(id).await?;
-
-        // Delete the user
         self.user_repository.delete_user(id).await?;
 
         Ok(())

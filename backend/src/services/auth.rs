@@ -72,7 +72,7 @@ impl AuthServiceTrait for AuthService {
             .user_repository
             .get_password_hash_by_email(&login_request.email)
             .await
-            .map_err(|_| AppError::AuthenticationError("Invalid credentials".to_string()))?;
+            .map_err(|_| AppError::AuthenticationError("User not found".to_string()))?;
 
         // Verify password
         if !self
@@ -85,12 +85,15 @@ impl AuthServiceTrait for AuthService {
         }
 
         // Update last login
-        if let Err(_) = self
+        if self
             .user_repository
             .update_last_login(password_data.id)
             .await
+            .is_err()
         {
-            // Don't fail the login for this
+            return Err(AppError::InternalServerError(
+                "Failed to update last login".to_string(),
+            ));
         }
 
         // Generate token

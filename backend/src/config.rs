@@ -1,6 +1,5 @@
 use dotenvy::dotenv;
 use serde::Deserialize;
-use std::env;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
@@ -17,33 +16,6 @@ pub struct Config {
 impl Config {
     pub fn from_env() -> Self {
         dotenv().expect("Failed to load .env file");
-        let port = env::var("PORT")
-            .expect("PORT MUST BE DEFINED!")
-            .parse::<u16>()
-            .expect("PORT must be a valid port number");
-        let db_host = env::var("DB_HOST").expect("DB_HOST must be defined in .env");
-        let db_port = env::var("DB_PORT")
-            .expect("DB_PORT must be defined in .env")
-            .parse::<u16>()
-            .expect("DB_PORT must be a valid port number");
-        let db_name = env::var("DB_NAME").expect("DB_NAME must be defined in .env");
-        let db_user = env::var("DB_USER").expect("DB_USER must be defined in .env");
-        let db_pass = env::var("DB_PASSWORD").expect("DB_PASSWORD must be defined in .env");
-        let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be defined in .env");
-        let jwt_expires_in = env::var("JWT_EXPIRES_IN")
-            .expect("JWT_EXPIRES_IN must be defined in .env")
-            .parse::<u64>()
-            .expect("JWT_EXPIRES_IN must be a valid number");
-
-        Self {
-            port,
-            db_host,
-            db_name,
-            db_port,
-            db_user,
-            db_pass,
-            jwt_secret,
-            jwt_expires_in,
-        }
+        envy::from_env::<Config>().expect("Failed to load config from environment variables")
     }
 }
