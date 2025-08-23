@@ -20,6 +20,9 @@ use crate::{
         (status = 200, description = "Rooms found", body = Vec<Room>),
         (status = 500, description = "Internal Server Error", body = String)
     ),
+    security(
+        ("bearer_auth" = [])
+    ),
     tag = "rooms"
 )]
 pub async fn get_house_rooms<R, H, A>(
@@ -48,6 +51,9 @@ where
     responses(
         (status = 201, description = "Room created", body = Room),
         (status = 500, description = "Internal Server Error", body = String)
+    ),
+    security(
+        ("bearer_auth" = [])
     ),
     tag = "rooms"
 )]
@@ -78,6 +84,9 @@ where
     responses(
         (status = 200, description = "Room deleted", body = ()),
         (status = 500, description = "Internal Server Error", body = String)
+    ),
+    security(
+        ("bearer_auth" = [])
     ),
     tag = "rooms"
 )]

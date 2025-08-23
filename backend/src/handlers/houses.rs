@@ -20,6 +20,9 @@ use crate::{
         (status = 200, description = "Houses found", body = Vec<House>),
         (status = 500, description = "Internal Server Error", body = String)
     ),
+    security(
+        ("bearer_auth" = [])
+    ),
     tag = "houses"
 )]
 pub async fn get_user_houses(
@@ -45,6 +48,9 @@ pub async fn get_user_houses(
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
+    security(
+        ("bearer_auth" = [])
+    ),
     tag = "houses"
 )]
 pub async fn get_user_house_by_id(
@@ -67,6 +73,9 @@ pub async fn get_user_house_by_id(
         (status = 201, description = "House created successfully", body = House),
         (status = 400, description = "Bad Request - Invalid input", body = String),
         (status = 500, description = "Internal Server Error", body = String)
+    ),
+    security(
+        ("bearer_auth" = [])
     ),
     tag = "houses"
 )]
@@ -93,6 +102,9 @@ pub async fn create_house(
         (status = 200, description = "House deleted successfully", body = ()),
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
+    ),
+    security(
+        ("bearer_auth" = [])
     ),
     tag = "houses"
 )]
@@ -216,8 +228,8 @@ mod tests {
         mock_user_house_repo
             .expect_add_house_to_user()
             .with(
-                eq(user_house.user_id as i64),
-                eq(user_house.house_id as i64),
+                eq(user_house.user_id),
+                eq(user_house.house_id),
             )
             .times(1)
             .returning(move |_, _| Ok(user_house.clone()));

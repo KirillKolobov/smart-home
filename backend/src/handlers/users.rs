@@ -25,6 +25,9 @@ use crate::{
         (status = 404, description = "User not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
+    security(
+        ("bearer_auth" = [])
+    ),
     tag = "users"
 )]
 pub async fn get_user(
@@ -50,6 +53,9 @@ pub async fn get_user(
         (status = 404, description = "User not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
+    security(
+        ("bearer_auth" = [])
+    ),
     tag = "users"
 )]
 pub async fn get_user_profile(
@@ -74,6 +80,9 @@ pub async fn get_user_profile(
         (status = 204, description = "User deleted successfully"),
         (status = 404, description = "User not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
+    ),
+    security(
+        ("bearer_auth" = [])
     ),
     tag = "users"
 )]
