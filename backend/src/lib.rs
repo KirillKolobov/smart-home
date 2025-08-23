@@ -80,7 +80,7 @@ pub fn create_app(app_state: AppState) -> Router {
 
     // Create protected routes that require authentication
     let protected_routes = Router::new()
-        .nest("/users", routes::users::users_router(app_state.clone()))
+        .nest("/profile", routes::users::users_router(app_state.clone()))
         .nest("/houses", routes::houses::houses_router(app_state.clone()))
         .nest(
             "/houses/{house_id}/rooms",

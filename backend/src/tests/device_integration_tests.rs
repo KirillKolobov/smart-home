@@ -44,7 +44,8 @@ async fn create_test_app() -> Result<(Router, PgPool), Box<dyn std::error::Error
 // Helper to create a house
 async fn create_house(server: &TestServer, token: &str, name: &str) -> houses::House {
     let create_house_payload = json!({
-        "name": name
+        "name": name,
+        "address": name
     });
     let response = server
         .post("/houses")
@@ -58,7 +59,8 @@ async fn create_house(server: &TestServer, token: &str, name: &str) -> houses::H
 // Helper to create a room
 async fn create_room(server: &TestServer, token: &str, house_id: i32, name: &str) -> rooms::Room {
     let create_room_payload = json!({
-        "name": name
+        "name": name,
+        "room_type": "Living Room"
     });
     let response = server
         .post(&format!("/houses/{}/rooms", house_id))

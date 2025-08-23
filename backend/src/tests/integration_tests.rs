@@ -107,45 +107,20 @@ async fn test_protected_user_endpoints() {
     let server = TestServer::new(app).unwrap();
 
     // First, create a user and login to get token
-    let (_email, _phone, token, user_id) = register_unique_user(&server).await;
+    let (_email, _phone, token, _) = register_unique_user(&server).await;
 
     // Test getting user (should require auth)
     let response = server
-        .get(&format!("/users/{}", user_id))
+        .get("/profile")
         .add_header("Authorization", format!("Bearer {}", token))
         .await;
 
     assert_eq!(response.status_code(), StatusCode::OK);
 
     // Test getting user without auth (should fail)
-    let response = server.get(&format!("/users/{}", user_id)).await;
+    let response = server.get("/profile").await;
 
     assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
-}
-
-#[tokio::test] // Requires test database setup
-async fn test_user_deletion() {
-    let app = create_test_app().await.expect("Failed to create test app");
-    let server = TestServer::new(app).unwrap();
-
-    // Create user and login
-    let (_email, _phone, token, user_id) = register_unique_user(&server).await;
-
-    // Delete user
-    let response = server
-        .delete(&format!("/users/{}", user_id))
-        .add_header("Authorization", format!("Bearer {}", token))
-        .await;
-
-    assert_eq!(response.status_code(), StatusCode::NO_CONTENT);
-
-    // Try to get deleted user (should fail)
-    let response = server
-        .get(&format!("/users/{}", user_id))
-        .add_header("Authorization", format!("Bearer {}", token))
-        .await;
-
-    assert_eq!(response.status_code(), StatusCode::NOT_FOUND);
 }
 
 #[tokio::test] // Requires test database setup

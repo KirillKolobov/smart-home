@@ -18,6 +18,7 @@ use crate::{
     path = "/houses/{id}/rooms",
     responses(
         (status = 200, description = "Rooms found", body = Vec<Room>),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     security(
@@ -50,6 +51,7 @@ where
     path = "/houses/{id}/rooms",
     responses(
         (status = 201, description = "Room created", body = Room),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     security(

@@ -23,6 +23,7 @@ use crate::{
     responses(
         (status = 201, description = "Device created", body = Device),
         (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     security(
@@ -52,6 +53,7 @@ pub async fn create_device(
     ),
     responses(
         (status = 200, description = "Device found", body = Device),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "Device not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -84,6 +86,7 @@ pub async fn get_device_by_id(
     responses(
         (status = 200, description = "Device updated", body = Device),
         (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     security(
@@ -114,6 +117,7 @@ pub async fn update_device(
     ),
     responses(
         (status = 204, description = "Device deleted successfully"),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "Device not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -142,6 +146,7 @@ pub async fn delete_device(
     ),
     responses(
         (status = 200, description = "Devices found", body = Vec<Device>),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "Room not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),

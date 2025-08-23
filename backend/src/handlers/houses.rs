@@ -20,6 +20,7 @@ use crate::{
     path = "/houses",
     responses(
         (status = 200, description = "Houses found", body = Vec<House>),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     security(
@@ -47,6 +48,7 @@ pub async fn get_user_houses(
     ),
     responses(
         (status = 200, description = "House found", body = House),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -74,6 +76,7 @@ pub async fn get_user_house_by_id(
     responses(
         (status = 201, description = "House created successfully", body = House),
         (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     security(
@@ -102,6 +105,7 @@ pub async fn create_house(
     ),
     responses(
         (status = 200, description = "House deleted successfully", body = ()),
+        (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),

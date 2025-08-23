@@ -24,9 +24,7 @@ impl Modify for SecurityAddon {
     paths(
         handlers::auth::login,
         handlers::auth::register,
-        handlers::users::get_user,
         handlers::users::get_user_profile,
-        handlers::users::delete_user,
         handlers::houses::get_user_houses,
         handlers::houses::get_user_house_by_id,
         handlers::houses::create_house,

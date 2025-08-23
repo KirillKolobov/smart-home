@@ -1,15 +1,10 @@
 use std::sync::Arc;
 
 use crate::{
-    handlers::users::{delete_user, get_user, get_user_profile},
-    repositories::UserRepository,
-    services::user_service::UserService,
-    AppState,
+    handlers::users::get_user_profile, repositories::UserRepository,
+    services::user_service::UserService, AppState,
 };
-use axum::{
-    routing::{delete, get},
-    Router,
-};
+use axum::{routing::get, Router};
 
 #[derive(Clone)]
 pub struct UserRouterState {
@@ -29,9 +24,7 @@ pub fn users_router(app_state: AppState) -> Router {
     let user_router_state = UserRouterState::new(app_state);
 
     Router::new()
-        .route("/{id}", get(get_user))
-        .route("/{id}/profile", get(get_user_profile))
-        .route("/{id}", delete(delete_user))
+        .route("/", get(get_user_profile))
         .with_state(user_router_state)
 }
 

@@ -41,7 +41,23 @@ impl HouseRepositoryTrait for HouseRepository {
             house.address
         )
         .fetch_one(&self.pool)
-        .await?;
+        .await
+        .map_err(|e| {
+            if let sqlx::Error::Database(db_err) = &e {
+                if db_err.code().as_deref() == Some("23505") {
+                    if let Some(constraint) = db_err.constraint() {
+                        if constraint == "houses_address_key" {
+                            return AppError::BadRequest(
+                                "House with this address already exists".to_string(),
+                            );
+                        }
+                    }
+                    return AppError::BadRequest("Duplicate entry".to_string());
+                }
+            }
+            tracing::error!("Database error: {}", e);
+            AppError::from(e)
+        })?;
 
         Ok(result)
     }
