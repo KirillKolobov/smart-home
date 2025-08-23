@@ -11,7 +11,17 @@ pub struct Claims {
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct LoginRequest {
-    #[validate(email)]
+    #[validate(
+        required(message = "Email is required"),
+        email(message = "Invalid email format")
+    )]
+    pub email: Option<String>,
+    #[validate(required(message = "Password is required"))]
+    pub password: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct ValidatedLoginRequest {
     pub email: String,
     pub password: String,
 }

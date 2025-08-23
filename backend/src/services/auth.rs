@@ -5,20 +5,21 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use mockall::automock;
-use validator::Validate;
 
 use crate::{
     config::Config,
     errors::{AppError, Result},
-    models::auth::{AuthResponse, Claims, LoginRequest, RegisterUser},
-    models::users::User,
+    models::{
+        auth::{AuthResponse, Claims, RegisterUser, ValidatedLoginRequest},
+        users::User,
+    },
     repositories::UserRepositoryTrait,
 };
 
 #[automock]
 #[async_trait]
 pub trait AuthServiceTrait {
-    async fn login(&self, login_request: LoginRequest) -> Result<AuthResponse>;
+    async fn login(&self, login_request: ValidatedLoginRequest) -> Result<AuthResponse>;
     async fn register(&self, register_user: RegisterUser) -> Result<User>;
     async fn validate_token(&self, token: &str) -> Result<Claims>;
     fn generate_token(&self, user_id: i64) -> Result<String>;
@@ -68,10 +69,7 @@ impl AuthService {
 
 #[async_trait]
 impl AuthServiceTrait for AuthService {
-    async fn login(&self, login_request: LoginRequest) -> Result<AuthResponse> {
-        // Validate input
-        login_request.validate()?;
-
+    async fn login(&self, login_request: ValidatedLoginRequest) -> Result<AuthResponse> {
         // Get user password hash
         let password_data = self
             .user_repository
@@ -111,8 +109,6 @@ impl AuthServiceTrait for AuthService {
     }
 
     async fn register(&self, register_user: RegisterUser) -> Result<User> {
-        register_user.validate()?;
-
         let email = register_user.email.as_ref().unwrap();
         self.validate_unique_email(email).await?;
 
@@ -210,7 +206,7 @@ mod tests {
 
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
-        let login_request = LoginRequest {
+        let login_request = ValidatedLoginRequest {
             email: "test@example.com".to_string(),
             password: "password123".to_string(),
         };
@@ -242,7 +238,7 @@ mod tests {
 
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
-        let login_request = LoginRequest {
+        let login_request = ValidatedLoginRequest {
             email: "test@example.com".to_string(),
             password: "wrongpassword".to_string(),
         };
@@ -271,7 +267,7 @@ mod tests {
 
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
-        let login_request = LoginRequest {
+        let login_request = ValidatedLoginRequest {
             email: "nonexistent@example.com".to_string(),
             password: "password123".to_string(),
         };
@@ -440,30 +436,5 @@ mod tests {
         assert!(result.is_ok());
         let claims = result.unwrap();
         assert_eq!(claims.sub, 1);
-    }
-
-    #[test]
-    fn test_invalid_email_validation() {
-        let login_request = LoginRequest {
-            email: "invalid-email".to_string(),
-            password: "password123".to_string(),
-        };
-
-        let validation_result = login_request.validate();
-        assert!(validation_result.is_err());
-    }
-
-    #[test]
-    fn test_short_password_validation() {
-        let register_request = RegisterUser {
-            first_name: Some("John".to_string()),
-            last_name: Some("Doe".to_string()),
-            phone: Some("1234567890".to_string()),
-            email: Some("test@example.com".to_string()),
-            password: Some("123".to_string()), // Too short
-        };
-
-        let validation_result = register_request.validate();
-        assert!(validation_result.is_err());
     }
 }

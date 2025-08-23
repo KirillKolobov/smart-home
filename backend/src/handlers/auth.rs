@@ -2,7 +2,7 @@ use crate::{
     errors::{Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
     models::{
-        auth::{AuthResponse, LoginRequest, RegisterUser},
+        auth::{AuthResponse, LoginRequest, RegisterUser, ValidatedLoginRequest},
         users::User,
     },
     routes::auth::AuthRouterState,
@@ -30,7 +30,11 @@ pub async fn login(
     ValidatedJson(payload): ValidatedJson<LoginRequest>,
 ) -> Result<Json<AuthResponse>> {
     // Attempt login
-    let auth_response = state.auth_service.login(payload).await?;
+    let validated_login = ValidatedLoginRequest {
+        email: payload.email.unwrap(),
+        password: payload.password.unwrap(),
+    };
+    let auth_response = state.auth_service.login(validated_login).await?;
 
     Ok(Json(auth_response))
 }
@@ -115,8 +119,8 @@ mod tests {
         };
 
         let login_request = LoginRequest {
-            email: "test@example.com".to_string(),
-            password: "password123".to_string(),
+            email: Some("test@example.com".to_string()),
+            password: Some("password123".to_string()),
         };
 
         let result = login(State(state), ValidatedJson(login_request)).await;
@@ -142,8 +146,8 @@ mod tests {
         };
 
         let login_request = LoginRequest {
-            email: "invalid-email".to_string(), // Invalid email format
-            password: "password123".to_string(),
+            email: Some("invalid-email".to_string()), // Invalid email format
+            password: Some("password123".to_string()),
         };
 
         let result = login(State(state), ValidatedJson(login_request)).await;
