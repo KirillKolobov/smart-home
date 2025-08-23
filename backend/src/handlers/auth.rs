@@ -70,6 +70,7 @@ mod tests {
     };
     use axum::{extract::State, http::StatusCode};
     use bcrypt::{hash, DEFAULT_COST};
+    use validator::ValidationErrors;
 
     fn create_test_config() -> Config {
         Config {
@@ -125,8 +126,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_login_invalid_email() {
-        let mock_repo = MockUserRepositoryTrait::new();
+        let mut mock_repo = MockUserRepositoryTrait::new();
         let config = create_test_config();
+
+        mock_repo
+            .expect_get_password_hash_by_email()
+            .returning(|_| Err(AppError::NotFound("User not found".to_string())));
 
         let auth_service = AuthService::new(config.clone(), Arc::new(mock_repo));
         let pool = sqlx::postgres::PgPoolOptions::new()
@@ -150,8 +155,8 @@ mod tests {
         assert!(result.is_err());
 
         match result.unwrap_err() {
-            AppError::ValidationError(_) => (),
-            _ => panic!("Expected ValidationError"),
+            AppError::AuthenticationError(_) => (),
+            _ => panic!("Expected AuthenticationError"),
         }
     }
 
@@ -208,8 +213,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_register_invalid_input() {
-        let mock_repo = MockUserRepositoryTrait::new();
+        let mut mock_repo = MockUserRepositoryTrait::new();
         let config = create_test_config();
+
+        mock_repo.expect_find_by_email().returning(|_| Ok(None));
+
+        mock_repo
+            .expect_create_user()
+            .returning(|_| Err(AppError::ValidationError(ValidationErrors::new())));
 
         let auth_service = AuthService::new(config.clone(), Arc::new(mock_repo));
         let pool = sqlx::postgres::PgPoolOptions::new()
