@@ -2,7 +2,7 @@ use crate::{
     errors::{Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
     models::{
-        auth::{AuthResponse, LoginRequest, RegisterUser, ValidatedLoginRequest},
+        auth::{AuthResponse, LoginRequest, RegisterUser},
         users::User,
     },
     routes::auth::AuthRouterState,
@@ -19,7 +19,7 @@ use axum::{extract::State, http::StatusCode, Json};
     request_body = LoginRequest,
     responses(
         (status = 200, description = "Successful login", body = AuthResponse),
-        (status = 400, description = "Bad Request - Invalid input", body = String),
+        (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
         (status = 401, description = "Unauthorized - Invalid credentials", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -30,11 +30,7 @@ pub async fn login(
     ValidatedJson(payload): ValidatedJson<LoginRequest>,
 ) -> Result<Json<AuthResponse>> {
     // Attempt login
-    let validated_login = ValidatedLoginRequest {
-        email: payload.email.unwrap(),
-        password: payload.password.unwrap(),
-    };
-    let auth_response = state.auth_service.login(validated_login).await?;
+    let auth_response = state.auth_service.login(payload).await?;
 
     Ok(Json(auth_response))
 }

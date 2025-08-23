@@ -1,7 +1,11 @@
 use utoipa::OpenApi;
 
 use crate::models::{
-    auth::{AuthResponse, LoginRequest, RegisterUser}, devices::{CreateDevice, Device, UpdateDevice}, houses::{House, NewHouse}, rooms::{NewRoom, Room}, users::{User, UserProfile}
+    auth::{AuthResponse, LoginRequest, RegisterUser},
+    devices::{CreateDevice, Device, UpdateDevice},
+    houses::{House, NewHouse},
+    rooms::{NewRoom, Room},
+    users::{User, UserProfile},
 };
 
 #[derive(OpenApi)]
@@ -15,7 +19,7 @@ use crate::models::{
         crate::handlers::houses::get_user_houses,
         crate::handlers::houses::get_user_house_by_id,
         crate::handlers::houses::create_house,
-        crate::handlers::houses::delete_house, 
+        crate::handlers::houses::delete_house,
         crate::handlers::rooms::get_house_rooms,
         crate::handlers::rooms::create_room,
         crate::handlers::rooms::delete_room,

@@ -8,7 +8,7 @@ use axum::{
 };
 
 use crate::{
-    errors::Result,
+    errors::{Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
     models::devices::{CreateDevice, Device, UpdateDevice},
     routes::{devices::DeviceRouterState, rooms::HouseAccess},
@@ -23,7 +23,7 @@ use crate::{
     request_body = CreateDevice,
     responses(
         (status = 200, description = "Device created", body = Device),
-        (status = 400, description = "Bad Request - Invalid input", body = String),
+        (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     tag = "devices"
@@ -78,7 +78,7 @@ pub async fn get_device_by_id(
     request_body = UpdateDevice,
     responses(
         (status = 200, description = "Device updated", body = Device),
-        (status = 400, description = "Bad Request - Invalid input", body = String),
+        (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     tag = "devices"

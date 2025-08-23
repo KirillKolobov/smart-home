@@ -1,5 +1,8 @@
-pub mod integration_tests;
 pub mod device_integration_tests;
+pub mod integration_tests;
+
+#[cfg(test)]
+pub use test_utils::*;
 
 #[cfg(test)]
 mod test_utils {
@@ -50,5 +53,3 @@ mod test_utils {
         Ok(pool)
     }
 }
-
-pub use test_utils::*;

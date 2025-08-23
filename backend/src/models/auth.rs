@@ -20,12 +20,6 @@ pub struct LoginRequest {
     pub password: Option<String>,
 }
 
-#[derive(Debug)]
-pub struct ValidatedLoginRequest {
-    pub email: String,
-    pub password: String,
-}
-
 #[derive(Debug, Serialize, ToSchema)]
 pub struct AuthResponse {
     pub token: String,

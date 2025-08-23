@@ -107,8 +107,7 @@ mod tests {
         models::rooms::{NewRoom, Room},
         routes::rooms::RoomsRouterState,
         services::{
-            access_control_service::MockAccessControlServiceTrait,
-            house::MockHouseServiceTrait,
+            access_control_service::MockAccessControlServiceTrait, house::MockHouseServiceTrait,
             rooms::MockRoomsServiceTrait,
         },
     };

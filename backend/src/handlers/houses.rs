@@ -4,9 +4,9 @@ use axum::{
 };
 
 use crate::{
-    errors::Result,
+    errors::{Result, ValidationErrorResponse},
     models::houses::{House, NewHouse},
-    routes::houses::HousesRouterState,
+    routes::{houses::HousesRouterState, rooms::HouseAccess},
     services::house::HouseServiceTrait,
 };
 
@@ -65,7 +65,7 @@ pub async fn get_user_house_by_id(
     request_body = NewHouse,
     responses(
         (status = 201, description = "House created successfully", body = House),
-        (status = 400, description = "Bad Request - Invalid input", body = String),
+        (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     tag = "houses"
@@ -98,7 +98,7 @@ pub async fn create_house(
 )]
 pub async fn delete_house(
     State(state): State<HousesRouterState>,
-    Path(house_id): Path<i64>,
+    HouseAccess { house_id, .. }: HouseAccess,
 ) -> Result<Json<()>> {
     state.house_service.delete_house(house_id).await?;
 
@@ -117,7 +117,7 @@ mod tests {
             house_repository::MockHouseRepositoryTrait,
             user_houses_repository::MockUserHousesRepositoryTrait,
         },
-        services::house::HouseService,
+        services::{access_control_service::AccessControlService, house::HouseService},
     };
     use axum::extract::State;
     use chrono::Utc;
@@ -145,7 +145,12 @@ mod tests {
 
         let house_service =
             HouseService::new(Arc::new(mock_house_repo), Arc::new(mock_user_house_repo));
-        let state = HousesRouterState { house_service };
+        let access_control_service =
+            AccessControlService::new(Arc::new(MockUserHousesRepositoryTrait::new()));
+        let state = HousesRouterState {
+            house_service,
+            access_control_service,
+        };
 
         let result = get_user_houses(State(state), Extension(1)).await;
 
@@ -178,7 +183,12 @@ mod tests {
 
         let house_service =
             HouseService::new(Arc::new(mock_house_repo), Arc::new(mock_user_house_repo));
-        let state = HousesRouterState { house_service };
+        let access_control_service =
+            AccessControlService::new(Arc::new(MockUserHousesRepositoryTrait::new()));
+        let state = HousesRouterState {
+            house_service,
+            access_control_service,
+        };
 
         let result = get_user_house_by_id(State(state), Path(1)).await;
 
@@ -215,10 +225,7 @@ mod tests {
 
         mock_user_house_repo
             .expect_add_house_to_user()
-            .with(
-                eq(user_house.user_id as i64),
-                eq(user_house.house_id as i64),
-            )
+            .with(eq(user_house.user_id), eq(user_house.house_id))
             .times(1)
             .returning(move |_, _| Ok(user_house.clone()));
 
@@ -230,7 +237,12 @@ mod tests {
 
         let house_service =
             HouseService::new(Arc::new(mock_house_repo), Arc::new(mock_user_house_repo));
-        let state = HousesRouterState { house_service };
+        let access_control_service =
+            AccessControlService::new(Arc::new(MockUserHousesRepositoryTrait::new()));
+        let state = HousesRouterState {
+            house_service,
+            access_control_service,
+        };
 
         let result = create_house(State(state), Extension(1), Json(new_house)).await;
 
@@ -253,9 +265,21 @@ mod tests {
 
         let house_service =
             HouseService::new(Arc::new(mock_house_repo), Arc::new(mock_user_house_repo));
-        let state = HousesRouterState { house_service };
+        let access_control_service =
+            AccessControlService::new(Arc::new(MockUserHousesRepositoryTrait::new()));
+        let state = HousesRouterState {
+            house_service,
+            access_control_service,
+        };
 
-        let result = delete_house(State(state), Path(1)).await;
+        let result = delete_house(
+            State(state),
+            HouseAccess {
+                house_id: 1,
+                user_id: 1,
+            },
+        )
+        .await;
 
         assert!(result.is_ok());
         let Json(()) = result.unwrap();
@@ -274,9 +298,21 @@ mod tests {
 
         let house_service =
             HouseService::new(Arc::new(mock_house_repo), Arc::new(mock_user_house_repo));
-        let state = HousesRouterState { house_service };
+        let access_control_service =
+            AccessControlService::new(Arc::new(MockUserHousesRepositoryTrait::new()));
+        let state = HousesRouterState {
+            house_service,
+            access_control_service,
+        };
 
-        let result = delete_house(State(state), Path(1)).await;
+        let result = delete_house(
+            State(state),
+            HouseAccess {
+                house_id: 1,
+                user_id: 1,
+            },
+        )
+        .await;
 
         assert!(result.is_err());
         assert_eq!(
