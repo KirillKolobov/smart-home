@@ -8,11 +8,9 @@ use axum_test::TestServer;
 use rand::Rng;
 use serde_json::json;
 use sqlx::PgPool;
-use tokio::time;
 use uuid::Uuid;
 
 use crate::models::devices::Device;
-use crate::models::users::{UserEntity, UserRole};
 use crate::models::{houses, rooms};
 
 async fn create_test_app() -> Result<(Router, PgPool), Box<dyn std::error::Error>> {
@@ -72,7 +70,7 @@ async fn create_room(server: &TestServer, token: &str, house_id: i32, name: &str
 }
 
 // Helper to register and login a user
-async fn register_and_login_user(server: &TestServer, pool: &PgPool) -> (String, i32) {
+async fn register_and_login_user(server: &TestServer, _: &PgPool) -> (String, i32) {
     let unique_id = Uuid::new_v4();
     let email = format!("device_test_{}@example.com", unique_id);
     let phone = format!("111222{:04}", rand::rng().random_range(0..10000));
