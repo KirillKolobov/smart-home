@@ -22,6 +22,9 @@ use crate::{
         (status = 200, description = "Houses found", body = Vec<House>),
         (status = 500, description = "Internal Server Error", body = String)
     ),
+    security(
+        ("bearer_auth" = [])
+    ),
     tag = "houses"
 )]
 pub async fn get_user_houses(
@@ -47,6 +50,9 @@ pub async fn get_user_houses(
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
+    security(
+        ("bearer_auth" = [])
+    ),
     tag = "houses"
 )]
 pub async fn get_user_house_by_id(
@@ -69,6 +75,9 @@ pub async fn get_user_house_by_id(
         (status = 201, description = "House created successfully", body = House),
         (status = 400, description = "Bad Request - Invalid input", body = ValidationErrorResponse),
         (status = 500, description = "Internal Server Error", body = String)
+    ),
+    security(
+        ("bearer_auth" = [])
     ),
     tag = "houses"
 )]
@@ -95,6 +104,9 @@ pub async fn create_house(
         (status = 200, description = "House deleted successfully", body = ()),
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
+    ),
+    security(
+        ("bearer_auth" = [])
     ),
     tag = "houses"
 )]

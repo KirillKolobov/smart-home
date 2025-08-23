@@ -1,37 +1,62 @@
-use utoipa::OpenApi;
+use utoipa::{Modify, OpenApi};
 
-use crate::models::{
-    auth::{AuthResponse, LoginRequest, RegisterUser},
-    devices::{CreateDevice, Device, UpdateDevice},
-    houses::{House, NewHouse},
-    rooms::{NewRoom, Room},
-    users::{User, UserProfile},
-};
+use crate::{handlers, models};
+
+struct SecurityAddon;
+
+impl Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        let components = openapi.components.get_or_insert_with(Default::default);
+        components.add_security_scheme(
+            "bearer_auth",
+            utoipa::openapi::security::SecurityScheme::Http(
+                utoipa::openapi::security::HttpBuilder::new()
+                    .scheme(utoipa::openapi::security::HttpAuthScheme::Bearer)
+                    .bearer_format("JWT")
+                    .build(),
+            ),
+        );
+    }
+}
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        crate::handlers::auth::login,
-        crate::handlers::auth::register,
-        crate::handlers::users::get_user,
-        crate::handlers::users::get_user_profile,
-        crate::handlers::users::delete_user,
-        crate::handlers::houses::get_user_houses,
-        crate::handlers::houses::get_user_house_by_id,
-        crate::handlers::houses::create_house,
-        crate::handlers::houses::delete_house,
-        crate::handlers::rooms::get_house_rooms,
-        crate::handlers::rooms::create_room,
-        crate::handlers::rooms::delete_room,
-        crate::handlers::devices::get_devices_by_house_id,
-        crate::handlers::devices::get_devices_by_room_id,
-        crate::handlers::devices::get_device_by_id,
-        crate::handlers::devices::create_device,
-        crate::handlers::devices::update_device,
-        crate::handlers::devices::delete_device
+        handlers::auth::login,
+        handlers::auth::register,
+        handlers::users::get_user,
+        handlers::users::get_user_profile,
+        handlers::users::delete_user,
+        handlers::houses::get_user_houses,
+        handlers::houses::get_user_house_by_id,
+        handlers::houses::create_house,
+        handlers::houses::delete_house,
+        handlers::rooms::get_house_rooms,
+        handlers::rooms::create_room,
+        handlers::rooms::delete_room,
+        handlers::devices::get_devices_by_house_id,
+        handlers::devices::get_devices_by_room_id,
+        handlers::devices::get_device_by_id,
+        handlers::devices::create_device,
+        handlers::devices::update_device,
+        handlers::devices::delete_device,
+        crate::health_check
     ),
     components(
-        schemas(LoginRequest, AuthResponse, User, UserProfile, RegisterUser, NewHouse, House, Room, NewRoom, CreateDevice, Device, UpdateDevice)
+        schemas(
+            models::auth::LoginRequest,
+            models::auth::AuthResponse,
+            models::users::User,
+            models::users::UserProfile,
+            models::auth::RegisterUser,
+            models::houses::NewHouse,
+            models::houses::House,
+            models::rooms::Room,
+            models::rooms::NewRoom,
+            models::devices::CreateDevice,
+            models::devices::Device,
+            models::devices::UpdateDevice
+        )
     ),
     tags(
         (name = "auth", description = "Authentication endpoints"),
@@ -56,7 +81,8 @@ use crate::models::{
     ),
     servers(
         (url = "/", description = "Local server")
-    )
+    ),
+    modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;
 
