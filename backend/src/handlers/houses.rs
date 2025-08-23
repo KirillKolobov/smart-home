@@ -1,10 +1,12 @@
 use axum::{
     extract::{Path, State},
     Extension, Json,
+    http::StatusCode,
 };
 
 use crate::{
     errors::{Result, ValidationErrorResponse},
+    middlewares::validator::ValidatedJson,
     models::houses::{House, NewHouse},
     routes::{houses::HousesRouterState, rooms::HouseAccess},
     services::house::HouseServiceTrait,
@@ -73,11 +75,11 @@ pub async fn get_user_house_by_id(
 pub async fn create_house(
     State(state): State<HousesRouterState>,
     Extension(user_id): Extension<i64>,
-    Json(payload): Json<NewHouse>,
-) -> Result<Json<House>> {
+    ValidatedJson(payload): ValidatedJson<NewHouse>,
+) -> Result<(StatusCode, Json<House>)> {
     let house = state.house_service.create_house(user_id, payload).await?;
 
-    Ok(Json(house))
+    Ok((StatusCode::CREATED, Json(house)))
 }
 
 /// Delete house endpoint
@@ -244,10 +246,11 @@ mod tests {
             access_control_service,
         };
 
-        let result = create_house(State(state), Extension(1), Json(new_house)).await;
+        let result = create_house(State(state), Extension(1), ValidatedJson(new_house)).await;
 
         assert!(result.is_ok());
-        let Json(result_house) = result.unwrap();
+        let (status, Json(result_house)) = result.unwrap();
+        assert_eq!(status, StatusCode::CREATED);
         assert_eq!(result_house.id, cloned_created_house.id);
         assert_eq!(result_house.name, cloned_created_house.name);
     }
