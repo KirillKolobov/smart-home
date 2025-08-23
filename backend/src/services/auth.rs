@@ -30,6 +30,8 @@ pub struct AuthService {
     user_repository: Arc<dyn UserRepositoryTrait + Send + Sync>,
 }
 
+use validator::ValidationErrors;
+
 impl AuthService {
     pub fn new(
         config: Config,
@@ -52,10 +54,13 @@ impl AuthService {
     }
 
     async fn validate_unique_email(&self, email: &str) -> Result<()> {
-        if self.user_repository.user_exists_by_email(email).await? {
-            return Err(AppError::ValidationError(
-                "Email already exists".to_string(),
-            ));
+        if self.user_repository.find_by_email(email).await?.is_some() {
+            let mut errors = ValidationErrors::new();
+            errors.add(
+                "email",
+                validator::ValidationError::new("Email already exists"),
+            );
+            return Err(AppError::ValidationError(errors));
         }
         Ok(())
     }
@@ -105,14 +110,19 @@ impl AuthServiceTrait for AuthService {
         })
     }
 
-    async fn register(&self, mut register_user: RegisterUser) -> Result<User> {
+    async fn register(&self, register_user: RegisterUser) -> Result<User> {
         register_user.validate()?;
 
-        self.validate_unique_email(&register_user.email).await?;
+        let email = register_user.email.as_ref().unwrap();
+        self.validate_unique_email(email).await?;
 
-        register_user.password = self.hash_password(&register_user.password).await?;
+        let password = register_user.password.as_ref().unwrap();
+        let hashed_password = self.hash_password(password).await?;
 
-        let user = self.user_repository.create_user(register_user).await?;
+        let mut new_user = register_user;
+        new_user.password = Some(hashed_password);
+
+        let user = self.user_repository.create_user(new_user).await?;
 
         Ok(user)
     }
@@ -291,10 +301,10 @@ mod tests {
         };
 
         mock_repo
-            .expect_user_exists_by_email()
+            .expect_find_by_email()
             .with(mockall::predicate::eq("test@example.com"))
             .times(1)
-            .returning(|_| Ok(false));
+            .returning(|_| Ok(None));
 
         mock_repo
             .expect_create_user()
@@ -304,11 +314,11 @@ mod tests {
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
         let register_request = RegisterUser {
-            first_name: "John".to_string(),
-            last_name: "Doe".to_string(),
-            phone: "1234567890".to_string(),
-            email: "test@example.com".to_string(),
-            password: "password123".to_string(),
+            first_name: Some("John".to_string()),
+            last_name: Some("Doe".to_string()),
+            phone: Some("1234567890".to_string()),
+            email: Some("test@example.com".to_string()),
+            password: Some("password123".to_string()),
         };
 
         let result = auth_service.register(register_request).await;
@@ -327,27 +337,39 @@ mod tests {
         let config = create_test_config();
 
         mock_repo
-            .expect_user_exists_by_email()
+            .expect_find_by_email()
             .with(mockall::predicate::eq("existing@example.com"))
             .times(1)
-            .returning(|_| Ok(true));
+            .returning(|_| {
+                Ok(Some(UserEntity {
+                    id: 1,
+                    email: "existing@example.com".to_string(),
+                    first_name: "John".to_string(),
+                    last_name: "Doe".to_string(),
+                    phone: "1234567890".to_string(),
+                    role: UserRole::User,
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                    last_login_at: None,
+                }))
+            });
 
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
         let register_request = RegisterUser {
-            first_name: "John".to_string(),
-            last_name: "Doe".to_string(),
-            phone: "1234567890".to_string(),
-            email: "existing@example.com".to_string(),
-            password: "password123".to_string(),
+            first_name: Some("John".to_string()),
+            last_name: Some("Doe".to_string()),
+            phone: Some("1234567890".to_string()),
+            email: Some("existing@example.com".to_string()),
+            password: Some("password123".to_string()),
         };
 
         let result = auth_service.register(register_request).await;
         assert!(result.is_err());
 
         match result.unwrap_err() {
-            AppError::ValidationError(msg) => {
-                assert_eq!(msg, "Email already exists");
+            AppError::ValidationError(errors) => {
+                assert!(errors.field_errors().contains_key("email"));
             }
             _ => panic!("Expected ValidationError"),
         }
@@ -434,11 +456,11 @@ mod tests {
     #[test]
     fn test_short_password_validation() {
         let register_request = RegisterUser {
-            first_name: "John".to_string(),
-            last_name: "Doe".to_string(),
-            phone: "1234567890".to_string(),
-            email: "test@example.com".to_string(),
-            password: "123".to_string(), // Too short
+            first_name: Some("John".to_string()),
+            last_name: Some("Doe".to_string()),
+            phone: Some("1234567890".to_string()),
+            email: Some("test@example.com".to_string()),
+            password: Some("123".to_string()), // Too short
         };
 
         let validation_result = register_request.validate();

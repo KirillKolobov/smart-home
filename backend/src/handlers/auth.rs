@@ -1,8 +1,10 @@
 use crate::{
-    errors::Result,
+    errors::{Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
-    models::auth::{AuthResponse, LoginRequest, RegisterUser},
-    models::users::User,
+    models::{
+        auth::{AuthResponse, LoginRequest, RegisterUser},
+        users::User,
+    },
     routes::auth::AuthRouterState,
     services::AuthServiceTrait,
 };
@@ -42,7 +44,7 @@ pub async fn login(
     request_body = RegisterUser,
     responses(
         (status = 201, description = "User created successfully", body = User),
-        (status = 400, description = "Bad Request - Invalid input or user already exists", body = String),
+        (status = 400, description = "Bad Request - Invalid input or user already exists", body = ValidationErrorResponse),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     tag = "auth"
@@ -166,9 +168,7 @@ mod tests {
             email: "test@example.com".to_string(),
         };
 
-        mock_repo
-            .expect_user_exists_by_email()
-            .returning(|_| Ok(false));
+        mock_repo.expect_find_by_email().returning(|_| Ok(None));
 
         mock_repo
             .expect_create_user()
@@ -188,11 +188,11 @@ mod tests {
         };
 
         let register_request = RegisterUser {
-            first_name: "John".to_string(),
-            last_name: "Doe".to_string(),
-            phone: "1234567890".to_string(),
-            email: "test@example.com".to_string(),
-            password: "password123".to_string(),
+            first_name: Some("John".to_string()),
+            last_name: Some("Doe".to_string()),
+            phone: Some("1234567890".to_string()),
+            email: Some("test@example.com".to_string()),
+            password: Some("password123".to_string()),
         };
 
         let result = register(State(state), ValidatedJson(register_request)).await;
@@ -225,11 +225,11 @@ mod tests {
         };
 
         let register_request = RegisterUser {
-            first_name: "j".to_string(),        // Too short
-            last_name: "D".to_string(),         // Too short
-            phone: "123".to_string(),           // Too short
-            email: "invalid-email".to_string(), // Invalid email
-            password: "123".to_string(),        // Too short
+            first_name: Some("j".to_string()),        // Too short
+            last_name: Some("D".to_string()),         // Too short
+            phone: Some("123".to_string()),           // Too short
+            email: Some("invalid-email".to_string()), // Invalid email
+            password: Some("123".to_string()),        // Too short
         };
 
         let result = register(State(state), ValidatedJson(register_request)).await;

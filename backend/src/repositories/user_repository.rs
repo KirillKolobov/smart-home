@@ -16,6 +16,7 @@ pub trait UserRepositoryTrait {
     async fn create_user(&self, user: RegisterUser) -> Result<User>;
     async fn get_user_by_id(&self, id: i64) -> Result<UserEntity>;
     async fn get_user_by_email(&self, email: &str) -> Result<UserEntity>;
+    async fn find_by_email(&self, email: &str) -> Result<Option<UserEntity>>;
     async fn get_password_hash_by_email(&self, email: &str) -> Result<PasswordHash>;
     async fn delete_user(&self, id: i64) -> Result<()>;
     async fn update_last_login(&self, id: i64) -> Result<()>;
@@ -43,11 +44,11 @@ impl UserRepositoryTrait for UserRepository {
             VALUES ($1, $2, $3, $4, $5, 'user')
             RETURNING id, first_name, last_name, phone, email
             "#,
-            user.first_name,
-            user.last_name,
-            user.phone,
-            user.email,
-            user.password
+            user.first_name.unwrap(),
+            user.last_name.unwrap(),
+            user.phone.unwrap(),
+            user.email.unwrap(),
+            user.password.unwrap()
         )
         .fetch_one(&self.pool)
         .await?;
@@ -82,6 +83,22 @@ impl UserRepositoryTrait for UserRepository {
             email
         )
         .fetch_one(&self.pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    async fn find_by_email(&self, email: &str) -> Result<Option<UserEntity>> {
+        let result = sqlx::query_as!(
+            UserEntity,
+            r#"
+            SELECT id, first_name, last_name, phone, email, role as "role: UserRole", created_at, updated_at, last_login_at
+            FROM users
+            WHERE email = $1
+            "#,
+            email
+        )
+        .fetch_optional(&self.pool)
         .await?;
 
         Ok(result)
@@ -155,11 +172,11 @@ mod tests {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
         let test_user = RegisterUser {
-            first_name: "John".to_string(),
-            last_name: "Doe".to_string(),
-            phone: "1234567890".to_string(),
-            email: "test@example.com".to_string(),
-            password: "hashedpassword".to_string(),
+            first_name: Some("John".to_string()),
+            last_name: Some("Doe".to_string()),
+            phone: Some("1234567890".to_string()),
+            email: Some("test@example.com".to_string()),
+            password: Some("hashedpassword".to_string()),
         };
 
         let expected_user = User {

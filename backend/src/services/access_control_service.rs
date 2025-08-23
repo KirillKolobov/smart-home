@@ -24,11 +24,7 @@ impl AccessControlService {
 
 #[async_trait]
 impl AccessControlServiceTrait for AccessControlService {
-    async fn validate_house_access(
-        &self,
-        house_id: i64,
-        user_id: i64,
-    ) -> Result<bool, AppError> {
+    async fn validate_house_access(&self, house_id: i64, user_id: i64) -> Result<bool, AppError> {
         let result = self
             .user_houses_repo
             .user_has_access_to_house(house_id, user_id)

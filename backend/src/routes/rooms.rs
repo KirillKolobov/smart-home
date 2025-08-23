@@ -11,8 +11,7 @@ use crate::{
     errors::AppError,
     handlers::rooms::{create_room, delete_room, get_house_rooms},
     repositories::{
-        rooms_repository::RoomsRepository,
-        user_houses_repository::UserHousesRepository,
+        rooms_repository::RoomsRepository, user_houses_repository::UserHousesRepository,
         HouseRepository,
     },
     services::{

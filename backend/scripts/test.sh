@@ -71,7 +71,7 @@ run_unit_tests() {
     print_info "Running unit tests..."
     export RUST_LOG=${RUST_LOG:-warn}
 
-    if cargo test --lib --bins --tests --exclude integration_tests; then
+    if cargo test --workspace --exclude integration_tests; then
         print_success "Unit tests passed!"
     else
         print_error "Unit tests failed!"
@@ -96,7 +96,7 @@ run_integration_tests() {
     print_info "Using database: $DATABASE_URL"
     print_warning "Make sure your test database is running and accessible!"
 
-    if cargo test -- --ignored; then
+    if cargo test --workspace -- --ignored; then
         print_success "Integration tests passed!"
     else
         print_error "Integration tests failed!"
@@ -108,9 +108,12 @@ run_integration_tests() {
 # Run all tests
 run_all_tests() {
     print_info "Running all tests..."
-    run_unit_tests
-    run_integration_tests
-    print_success "All tests passed!"
+    if cargo test --workspace; then
+        print_success "All tests passed!"
+    else
+        print_error "All tests failed!"
+        exit 1
+    fi
 }
 
 # Run tests with coverage
