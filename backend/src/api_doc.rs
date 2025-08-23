@@ -1,10 +1,7 @@
 use utoipa::OpenApi;
 
 use crate::models::{
-    auth::{AuthResponse, LoginRequest, RegisterUser},
-    houses::{House, NewHouse},
-    rooms::{NewRoom, Room},
-    users::{User, UserProfile},
+    auth::{AuthResponse, LoginRequest, RegisterUser}, devices::{CreateDevice, Device, UpdateDevice}, houses::{House, NewHouse}, rooms::{NewRoom, Room}, users::{User, UserProfile}
 };
 
 #[derive(OpenApi)]
@@ -21,16 +18,23 @@ use crate::models::{
         crate::handlers::houses::delete_house, 
         crate::handlers::rooms::get_house_rooms,
         crate::handlers::rooms::create_room,
-        crate::handlers::rooms::delete_room
+        crate::handlers::rooms::delete_room,
+        crate::handlers::devices::get_devices_by_house_id,
+        crate::handlers::devices::get_devices_by_room_id,
+        crate::handlers::devices::get_device_by_id,
+        crate::handlers::devices::create_device,
+        crate::handlers::devices::update_device,
+        crate::handlers::devices::delete_device
     ),
     components(
-        schemas(LoginRequest, AuthResponse, User, UserProfile, RegisterUser, NewHouse, House, Room, NewRoom)
+        schemas(LoginRequest, AuthResponse, User, UserProfile, RegisterUser, NewHouse, House, Room, NewRoom, CreateDevice, Device, UpdateDevice)
     ),
     tags(
         (name = "auth", description = "Authentication endpoints"),
         (name = "users", description = "User management endpoints"),
         (name = "houses", description = "House management endpoints"),
         (name = "rooms", description = "Room management endpoints"),
+        (name = "devices", description = "Device management endpoints"),
         (name = "health", description = "Health check endpoints")
     ),
     info(

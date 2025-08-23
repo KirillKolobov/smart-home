@@ -73,7 +73,9 @@ mod integration_tests {
 
         // First, create a user and login to get token
         let register_payload = json!({
-            "username": "testuser",
+            "first_name": "Test",
+            "last_name": "User",
+            "phone": "1112223333",
             "email": "test@example.com",
             "password": "password123"
         });
@@ -117,7 +119,9 @@ mod integration_tests {
 
         // Create user and login
         let register_payload = json!({
-            "username": "testuser",
+            "first_name": "Test",
+            "last_name": "User",
+            "phone": "1112223333",
             "email": "test@example.com",
             "password": "password123"
         });
@@ -178,7 +182,9 @@ mod integration_tests {
         let server = TestServer::new(app).unwrap();
 
         let register_payload = json!({
-            "username": "testuser",
+            "first_name": "Test",
+            "last_name": "User",
+            "phone": "1112223333",
             "email": "test@example.com",
             "password": "password123"
         });

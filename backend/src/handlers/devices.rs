@@ -1,0 +1,178 @@
+use std::sync::Arc;
+
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
+
+use crate::{
+    errors::Result,
+    middlewares::validator::ValidatedJson,
+    models::devices::{CreateDevice, Device, UpdateDevice},
+    routes::{devices::DeviceRouterState, rooms::HouseAccess},
+};
+
+/// Create a new device
+///
+/// Creates a new device.
+#[utoipa::path(
+    get,
+    path = "/devices",
+    request_body = CreateDevice,
+    responses(
+        (status = 200, description = "Device created", body = Device),
+        (status = 400, description = "Bad Request - Invalid input", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "devices"
+)]
+pub async fn create_device(
+    State(router_state): State<Arc<DeviceRouterState>>,
+    ValidatedJson(new_device): ValidatedJson<CreateDevice>,
+) -> Result<impl IntoResponse> {
+    let device = router_state
+        .device_service
+        .create_device(new_device)
+        .await?;
+    Ok((StatusCode::CREATED, Json(device)))
+}
+
+/// Get device by ID
+///
+/// Retrieves a specific device by its ID.
+#[utoipa::path(
+    get,
+    path = "/devices/{id}",
+    params(
+        ("id" = i64, Path, description = "Device ID")
+    ),
+    responses(
+        (status = 200, description = "Device found", body = Device),
+        (status = 404, description = "Device not found", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "devices"
+)]
+pub async fn get_device_by_id(
+    State(router_state): State<Arc<DeviceRouterState>>,
+    Path(device_id): Path<i64>,
+) -> Result<impl IntoResponse> {
+    let device = router_state
+        .device_service
+        .get_device_by_id(device_id)
+        .await?;
+    Ok((StatusCode::OK, Json(device)))
+}
+
+/// Update a device
+///
+/// Updates an existing device.
+#[utoipa::path(
+    put,
+    path = "/devices/{id}",
+    params(
+        ("id" = i64, Path, description = "Device ID")
+    ),
+    request_body = UpdateDevice,
+    responses(
+        (status = 200, description = "Device updated", body = Device),
+        (status = 400, description = "Bad Request - Invalid input", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "devices"
+)]
+pub async fn update_device(
+    State(router_state): State<Arc<DeviceRouterState>>,
+    Path(device_id): Path<i64>,
+    ValidatedJson(updated_device): ValidatedJson<UpdateDevice>,
+) -> Result<impl IntoResponse> {
+    let device = router_state
+        .device_service
+        .update_device(device_id, updated_device)
+        .await?;
+    Ok((StatusCode::OK, Json(device)))
+}
+
+/// Delete a device
+///
+/// Deletes a device by its ID.
+#[utoipa::path(
+    delete,
+    path = "/devices/{id}",
+    params(
+        ("id" = i64, Path, description = "Device ID")
+    ),
+    responses(
+        (status = 200, description = "Device deleted successfully", body = ()),
+        (status = 404, description = "Device not found", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "devices"
+)]
+pub async fn delete_device(
+    State(router_state): State<Arc<DeviceRouterState>>,
+    Path(device_id): Path<i64>,
+) -> Result<impl IntoResponse> {
+    router_state.device_service.delete_device(device_id).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Get devices by room ID
+///
+/// Retrieves devices associated with a specific room by its ID.
+#[utoipa::path(
+    get,
+    path = "/houses/{house_id}/rooms/{id}/devices",
+    params(
+        ("house_id" = i64, Path, description = "House ID"),
+        ("id" = i64, Path, description = "Room ID")
+    ),
+    responses(
+        (status = 200, description = "Devices found", body = Vec<Device>),
+        (status = 404, description = "Room not found", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "devices"
+)]
+pub async fn get_devices_by_room_id(
+    State(router_state): State<Arc<DeviceRouterState>>,
+    Path(room_id): Path<i64>,
+) -> Result<impl IntoResponse> {
+    let devices = router_state
+        .device_service
+        .get_devices_by_room_id(room_id)
+        .await?;
+    Ok((StatusCode::OK, Json(devices)))
+}
+
+/// Get devices by house ID
+///
+/// Retrieves devices associated with a specific house by its ID.
+#[utoipa::path(
+    get,
+    path = "/houses/{house_id}/devices",
+    params(
+        ("house_id" = i64, Path, description = "House ID")
+    ),
+    responses(
+        (status = 200, description = "Devices found", body = Vec<Device>),
+        (status = 404, description = "House not found", body = String),
+        (status = 500, description = "Internal Server Error", body = String)
+    ),
+    tag = "devices"
+)]
+pub async fn get_devices_by_house_id(
+    State(router_state): State<Arc<DeviceRouterState>>,
+    HouseAccess {
+        house_id,
+        user_id: _,
+    }: HouseAccess,
+) -> Result<impl IntoResponse> {
+    let devices = router_state
+        .device_service
+        .get_devices_by_house_id(house_id)
+        .await?;
+    Ok((StatusCode::OK, Json(devices)))
+}

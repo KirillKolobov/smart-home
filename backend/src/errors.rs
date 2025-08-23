@@ -59,9 +59,7 @@ impl IntoResponse for AppError {
             ),
         };
 
-        let body = Json(ErrorResponse {
-            error: message,
-        });
+        let body = Json(ErrorResponse { error: message });
 
         (status, body).into_response()
     }

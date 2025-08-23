@@ -1,4 +1,5 @@
 pub mod integration_tests;
+pub mod device_integration_tests;
 
 #[cfg(test)]
 mod test_utils {
