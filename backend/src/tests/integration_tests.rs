@@ -29,7 +29,7 @@ async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
 async fn register_unique_user(server: &TestServer) -> (String, String, String, i32) { // email, phone, token, user_id
     let unique_id = Uuid::new_v4();
     let email = format!("test_{}@example.com", unique_id);
-    let phone = format!("111222{:04}", rand::thread_rng().gen_range(0..10000));
+    let phone = format!("111222{:04}", rand::rng().random_range(0..10000));
     let password = "password123".to_string();
 
     let register_payload = json!({
@@ -63,7 +63,7 @@ async fn test_user_registration_and_login_flow() {
 
     let unique_id = Uuid::new_v4();
     let email = format!("john.doe_{}@example.com", unique_id);
-    let phone = format!("1234567890{:04}", rand::thread_rng().gen_range(0..10000));
+    let phone = format!("1234567890{:04}", rand::rng().random_range(0..10000));
     let password = "password123".to_string();
 
     // Test user registration
@@ -170,7 +170,7 @@ async fn test_duplicate_user_registration() {
 
     let unique_id = Uuid::new_v4();
     let email = format!("duplicate_test_{}@example.com", unique_id);
-    let phone = format!("111222{:04}", rand::thread_rng().gen_range(0..10000));
+    let phone = format!("111222{:04}", rand::rng().random_range(0..10000));
     let password = "password123".to_string();
 
     let register_payload = json!({
@@ -199,7 +199,7 @@ async fn test_invalid_input_validation() {
 
     let unique_id = Uuid::new_v4();
     let base_email = format!("invalid_test_{}@example.com", unique_id);
-    let base_phone = format!("111222{:04}", rand::thread_rng().gen_range(0..10000));
+    let base_phone = format!("111222{:04}", rand::rng().random_range(0..10000));
 
     // Test registration with invalid email
     let register_payload = json!({
