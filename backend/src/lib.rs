@@ -44,7 +44,7 @@ pub fn init_tracing() {
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "smart_home_backend=debug,tower_http=debug,axum=debug".into()),
         )
-        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::fmt::layer().with_writer(std::io::stdout))
         .init();
 }
 
@@ -85,6 +85,18 @@ pub fn create_app(app_state: AppState) -> Router {
         .nest(
             "/houses/{house_id}/rooms",
             routes::rooms::rooms_router(app_state.clone()),
+        )
+        .nest(
+            "/devices",
+            routes::devices::devices_router(app_state.clone()),
+        )
+        .nest(
+            "/houses/{house_id}/devices",
+            routes::devices::house_devices_router(app_state.clone()),
+        )
+        .nest(
+            "/houses/{house_id}/rooms/{room_id}/devices",
+            routes::devices::room_devices_router(app_state.clone()),
         )
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),
