@@ -6,9 +6,9 @@ use crate::{
 };
 use axum::{http::StatusCode, Router};
 use axum_test::TestServer;
+use rand::Rng;
 use serde_json::json;
 use uuid::Uuid;
-use rand::Rng;
 
 async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
     let pool = setup_test_database().await?;
@@ -26,7 +26,8 @@ async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
     Ok(app)
 }
 
-async fn register_unique_user(server: &TestServer) -> (String, String, String, i32) { // email, phone, token, user_id
+async fn register_unique_user(server: &TestServer) -> (String, String, String, i32) {
+    // email, phone, token, user_id
     let unique_id = Uuid::new_v4();
     let email = format!("test_{}@example.com", unique_id);
     let phone = format!("111222{:04}", rand::rng().random_range(0..10000));

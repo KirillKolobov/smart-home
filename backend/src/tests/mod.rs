@@ -46,18 +46,26 @@ mod test_utils {
         sqlx::migrate!("./migrations").run(&pool).await?;
 
         // Clean up any existing test data
-        sqlx::query!("TRUNCATE TABLE devices RESTART IDENTITY CASCADE").execute(&pool).await?;
-        sqlx::query!("TRUNCATE TABLE rooms RESTART IDENTITY CASCADE").execute(&pool).await?;
-        sqlx::query!("TRUNCATE TABLE user_houses RESTART IDENTITY CASCADE").execute(&pool).await?;
-        sqlx::query!("TRUNCATE TABLE houses RESTART IDENTITY CASCADE").execute(&pool).await?;
-        sqlx::query!("TRUNCATE TABLE users RESTART IDENTITY CASCADE").execute(&pool).await?;
+        sqlx::query!("TRUNCATE TABLE devices RESTART IDENTITY CASCADE")
+            .execute(&pool)
+            .await?;
+        sqlx::query!("TRUNCATE TABLE rooms RESTART IDENTITY CASCADE")
+            .execute(&pool)
+            .await?;
+        sqlx::query!("TRUNCATE TABLE user_houses RESTART IDENTITY CASCADE")
+            .execute(&pool)
+            .await?;
+        sqlx::query!("TRUNCATE TABLE houses RESTART IDENTITY CASCADE")
+            .execute(&pool)
+            .await?;
+        sqlx::query!("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+            .execute(&pool)
+            .await?;
 
-    // Close the old pool and create a new one to ensure fresh connections
-    pool.close().await;
-    let new_pool = create_test_pool().await?;
+        // Close the old pool and create a new one to ensure fresh connections
+        pool.close().await;
+        let new_pool = create_test_pool().await?;
 
-    Ok(new_pool)
-
-        
+        Ok(new_pool)
     }
 }

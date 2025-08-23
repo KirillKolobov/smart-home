@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, State},
-    Extension, Json,
     http::StatusCode,
+    Extension, Json,
 };
 
 use crate::{
