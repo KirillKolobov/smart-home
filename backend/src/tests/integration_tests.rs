@@ -7,6 +7,8 @@ use crate::{
 use axum::{http::StatusCode, Router};
 use axum_test::TestServer;
 use serde_json::json;
+use uuid::Uuid;
+use rand::Rng;
 
 async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
     let pool = setup_test_database().await?;
@@ -24,19 +26,53 @@ async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
     Ok(app)
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+async fn register_unique_user(server: &TestServer) -> (String, String, String, i32) { // email, phone, token, user_id
+    let unique_id = Uuid::new_v4();
+    let email = format!("test_{}@example.com", unique_id);
+    let phone = format!("111222{:04}", rand::thread_rng().gen_range(0..10000));
+    let password = "password123".to_string();
+
+    let register_payload = json!({
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": phone,
+        "email": email,
+        "password": password
+    });
+
+    let response = server.post("/register").json(&register_payload).await;
+    assert_eq!(response.status_code(), StatusCode::CREATED);
+
+    let login_payload = json!({
+        "email": email,
+        "password": password
+    });
+    let response = server.post("/login").json(&login_payload).await;
+    assert_eq!(response.status_code(), StatusCode::OK);
+    let auth_response: serde_json::Value = response.json();
+    let token = auth_response["token"].as_str().unwrap().to_string();
+    let user_id = auth_response["user_id"].as_i64().unwrap() as i32;
+
+    (email, phone, token, user_id)
+}
+
+#[tokio::test] // Requires test database setup
 async fn test_user_registration_and_login_flow() {
     let app = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
+
+    let unique_id = Uuid::new_v4();
+    let email = format!("john.doe_{}@example.com", unique_id);
+    let phone = format!("1234567890{:04}", rand::thread_rng().gen_range(0..10000));
+    let password = "password123".to_string();
 
     // Test user registration
     let register_payload = json!({
         "first_name": "John",
         "last_name": "Doe",
-        "phone": "1234567890",
-        "email": "test@example.com",
-        "password": "password123"
+        "phone": phone,
+        "email": email,
+        "password": password
     });
 
     let response = server.post("/register").json(&register_payload).await;
@@ -46,13 +82,13 @@ async fn test_user_registration_and_login_flow() {
     let user: User = response.json();
     assert_eq!(user.first_name, "John");
     assert_eq!(user.last_name, "Doe");
-    assert_eq!(user.phone, "1234567890");
-    assert_eq!(user.email, "test@example.com");
+    assert_eq!(user.phone, phone);
+    assert_eq!(user.email, email);
 
     // Test user login
     let login_payload = json!({
-        "email": "test@example.com",
-        "password": "password123"
+        "email": email,
+        "password": password
     });
 
     let response = server.post("/login").json(&login_payload).await;
@@ -64,37 +100,13 @@ async fn test_user_registration_and_login_flow() {
     assert!(auth_response["user_id"].is_number());
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_protected_user_endpoints() {
     let app = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
     // First, create a user and login to get token
-    let register_payload = json!({
-        "first_name": "Test",
-        "last_name": "User",
-        "phone": "1112223333",
-        "email": "test@example.com",
-        "password": "password123"
-    });
-
-    let register_response = server.post("/register").json(&register_payload).await;
-
-    assert_eq!(register_response.status_code(), StatusCode::CREATED);
-
-    let login_payload = json!({
-        "email": "test@example.com",
-        "password": "password123"
-    });
-
-    let login_response = server.post("/login").json(&login_payload).await;
-
-    assert_eq!(login_response.status_code(), StatusCode::OK);
-
-    let auth_response: serde_json::Value = login_response.json();
-    let token = auth_response["token"].as_str().unwrap();
-    let user_id = auth_response["user_id"].as_u64().unwrap();
+    let (_email, _phone, token, user_id) = register_unique_user(&server).await;
 
     // Test getting user (should require auth)
     let response = server
@@ -110,35 +122,13 @@ async fn test_protected_user_endpoints() {
     assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_user_deletion() {
     let app = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
     // Create user and login
-    let register_payload = json!({
-        "first_name": "Test",
-        "last_name": "User",
-        "phone": "1112223333",
-        "email": "test@example.com",
-        "password": "password123"
-    });
-
-    let register_response = server.post("/register").json(&register_payload).await;
-
-    assert_eq!(register_response.status_code(), StatusCode::CREATED);
-
-    let login_payload = json!({
-        "email": "test@example.com",
-        "password": "password123"
-    });
-
-    let login_response = server.post("/login").json(&login_payload).await;
-
-    let auth_response: serde_json::Value = login_response.json();
-    let token = auth_response["token"].as_str().unwrap();
-    let user_id = auth_response["user_id"].as_u64().unwrap();
+    let (_email, _phone, token, user_id) = register_unique_user(&server).await;
 
     // Delete user
     let response = server
@@ -157,8 +147,7 @@ async fn test_user_deletion() {
     assert_eq!(response.status_code(), StatusCode::NOT_FOUND);
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_invalid_credentials() {
     let app = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
@@ -174,18 +163,22 @@ async fn test_invalid_credentials() {
     assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_duplicate_user_registration() {
     let app = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
+    let unique_id = Uuid::new_v4();
+    let email = format!("duplicate_test_{}@example.com", unique_id);
+    let phone = format!("111222{:04}", rand::thread_rng().gen_range(0..10000));
+    let password = "password123".to_string();
+
     let register_payload = json!({
         "first_name": "Test",
         "last_name": "User",
-        "phone": "1112223333",
-        "email": "test@example.com",
-        "password": "password123"
+        "phone": phone,
+        "email": email,
+        "password": password
     });
 
     // First registration should succeed
@@ -199,15 +192,20 @@ async fn test_duplicate_user_registration() {
     assert_eq!(response.status_code(), StatusCode::BAD_REQUEST);
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_invalid_input_validation() {
     let app = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
+    let unique_id = Uuid::new_v4();
+    let base_email = format!("invalid_test_{}@example.com", unique_id);
+    let base_phone = format!("111222{:04}", rand::thread_rng().gen_range(0..10000));
+
     // Test registration with invalid email
     let register_payload = json!({
-        "username": "testuser",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": base_phone,
         "email": "invalid-email",
         "password": "password123"
     });
@@ -218,8 +216,10 @@ async fn test_invalid_input_validation() {
 
     // Test registration with short password
     let register_payload = json!({
-        "username": "testuser",
-        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": base_phone,
+        "email": base_email,
         "password": "123"
     });
 
@@ -227,10 +227,12 @@ async fn test_invalid_input_validation() {
 
     assert_eq!(response.status_code(), StatusCode::BAD_REQUEST);
 
-    // Test registration with short username
+    // Test registration with short username (assuming first_name/last_name are validated)
     let register_payload = json!({
-        "username": "ab",
-        "email": "test@example.com",
+        "first_name": "a",
+        "last_name": "b",
+        "phone": base_phone,
+        "email": base_email,
         "password": "password123"
     });
 

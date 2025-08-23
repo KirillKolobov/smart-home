@@ -5,16 +5,21 @@ use crate::{
 };
 use axum::{http::StatusCode, Router};
 use axum_test::TestServer;
+use rand::Rng;
 use serde_json::json;
+use sqlx::PgPool;
+use tokio::time;
+use uuid::Uuid;
 
 use crate::models::devices::Device;
+use crate::models::users::{UserEntity, UserRole};
 use crate::models::{houses, rooms};
 
-async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
+async fn create_test_app() -> Result<(Router, PgPool), Box<dyn std::error::Error>> {
     let pool = setup_test_database().await?;
     let config = create_test_config();
 
-    let app_state = AppState::new(crate::db::Database::new(pool), config);
+    let app_state = AppState::new(crate::db::Database::new(pool.clone()), config);
 
     let app = Router::new()
         .merge(crate::routes::auth::auth_router(app_state.clone()))
@@ -35,7 +40,7 @@ async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
             crate::routes::devices::devices_router(app_state.clone()),
         );
 
-    Ok(app)
+    Ok((app, pool))
 }
 
 // Helper to create a house
@@ -67,19 +72,23 @@ async fn create_room(server: &TestServer, token: &str, house_id: i32, name: &str
 }
 
 // Helper to register and login a user
-async fn register_and_login_user(server: &TestServer) -> (String, i32) {
+async fn register_and_login_user(server: &TestServer, pool: &PgPool) -> (String, i32) {
+    let unique_id = Uuid::new_v4();
+    let email = format!("device_test_{}@example.com", unique_id);
+    let phone = format!("111222{:04}", rand::rng().random_range(0..10000));
+
     let register_payload = json!({
         "first_name": "Test",
         "last_name": "User",
-        "phone": "1112223333",
-        "email": "device_test@example.com",
+        "phone": phone,
+        "email": email,
         "password": "password123"
     });
     let response = server.post("/register").json(&register_payload).await;
     assert_eq!(response.status_code(), StatusCode::CREATED);
 
     let login_payload = json!({
-        "email": "device_test@example.com",
+        "email": email,
         "password": "password123"
     });
     let response = server.post("/login").json(&login_payload).await;
@@ -90,13 +99,12 @@ async fn register_and_login_user(server: &TestServer) -> (String, i32) {
     (token, user_id)
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_create_device() {
-    let app = create_test_app().await.expect("Failed to create test app");
+    let (app, pool) = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
-    let (token, _user_id) = register_and_login_user(&server).await;
+    let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Device").await;
     let room = create_room(
         &server,
@@ -120,6 +128,18 @@ async fn test_create_device() {
         .json(&create_device_payload)
         .await;
 
+    if response.status_code() != StatusCode::CREATED {
+        eprintln!(
+            "Failed to create device. Status: {}",
+            response.status_code()
+        );
+        let body_text = response.text();
+        if let Ok(json_body) = serde_json::from_str::<serde_json::Value>(&body_text) {
+            eprintln!("Error Body (JSON): {:#?}", json_body);
+        } else {
+            eprintln!("Error Body (Text): {}", body_text);
+        }
+    }
     assert_eq!(response.status_code(), StatusCode::CREATED);
 
     let device: Device = response.json();
@@ -128,13 +148,12 @@ async fn test_create_device() {
     assert_eq!(device.room_id, room.id as i32);
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_get_device_by_id() {
-    let app = create_test_app().await.expect("Failed to create test app");
+    let (app, pool) = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
-    let (token, _user_id) = register_and_login_user(&server).await;
+    let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Get Device").await;
     let room = create_room(
         &server,
@@ -171,13 +190,12 @@ async fn test_get_device_by_id() {
     assert_eq!(device.name, "Bedroom Thermostat");
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_update_device() {
-    let app = create_test_app().await.expect("Failed to create test app");
+    let (app, pool) = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
-    let (token, _user_id) = register_and_login_user(&server).await;
+    let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Update Device").await;
     let room = create_room(
         &server,
@@ -221,13 +239,12 @@ async fn test_update_device() {
     assert_eq!(updated_device.name, "New Device Name");
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_delete_device() {
-    let app = create_test_app().await.expect("Failed to create test app");
+    let (app, pool) = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
-    let (token, _user_id) = register_and_login_user(&server).await;
+    let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Delete Device").await;
     let room = create_room(
         &server,
@@ -268,13 +285,12 @@ async fn test_delete_device() {
     assert_eq!(response.status_code(), StatusCode::NOT_FOUND);
 }
 
-#[tokio::test]
-#[ignore] // Requires test database setup
+#[tokio::test] // Requires test database setup
 async fn test_get_devices_by_room_id() {
-    let app = create_test_app().await.expect("Failed to create test app");
+    let (app, pool) = create_test_app().await.expect("Failed to create test app");
     let server = TestServer::new(app).unwrap();
 
-    let (token, _user_id) = register_and_login_user(&server).await;
+    let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Room Devices").await;
     let room1 = create_room(&server, &token, house.id.try_into().unwrap(), "Room 1").await;
     let room2 = create_room(&server, &token, house.id.try_into().unwrap(), "Room 2").await;

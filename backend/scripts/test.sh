@@ -83,6 +83,8 @@ run_unit_tests() {
 run_integration_tests() {
     print_info "Running integration tests..."
 
+    setup_test_db # Ensure test database is set up and migrated
+
     # Check if database URL is set
     if [ -z "$TEST_DATABASE_URL" ]; then
         print_warning "TEST_DATABASE_URL not set. Using default test database configuration."
@@ -94,9 +96,8 @@ run_integration_tests() {
     export RUST_LOG=${RUST_LOG:-info}
 
     print_info "Using database: $DATABASE_URL"
-    print_warning "Make sure your test database is running and accessible!"
 
-    if cargo test --workspace -- --ignored; then
+    if cargo test --workspace; then
         print_success "Integration tests passed!"
     else
         print_error "Integration tests failed!"
@@ -108,6 +109,7 @@ run_integration_tests() {
 # Run all tests
 run_all_tests() {
     print_info "Running all tests..."
+    setup_test_db
     if cargo test --workspace; then
         print_success "All tests passed!"
     else
