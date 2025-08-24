@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Path, State},
+    extract::{Extension, Path, State},
     http::StatusCode,
     Json,
 };
 
 use crate::{
-    errors::{Result, ValidationErrorResponse},
+    errors::{AppError, Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
     models::devices::{CreateDevice, Device, UpdateDevice},
     routes::{devices::DeviceRouterState, rooms::HouseAccess},
@@ -157,8 +157,20 @@ pub async fn delete_device(
 )]
 pub async fn get_devices_by_room_id(
     State(router_state): State<Arc<DeviceRouterState>>,
-    Path((_, room_id)): Path<(i64, i64)>,
+    Extension(user_id): Extension<i64>,
+    Path((house_id, room_id)): Path<(i64, i64)>,
 ) -> Result<Json<Vec<Device>>> {
+    router_state
+        .access_control_service
+        .validate_house_access(house_id, user_id)
+        .await?;
+
+    let room = router_state.room_service.get_room(room_id).await?;
+
+    if room.house_id != house_id {
+        return Err(AppError::AuthenticationError("Access denied".to_string()));
+    }
+
     let devices = router_state
         .device_service
         .get_devices_by_room_id(room_id)

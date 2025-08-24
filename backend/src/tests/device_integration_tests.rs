@@ -321,7 +321,7 @@ async fn test_get_devices_by_room_id() {
 
     // Get devices for Room 1
     let response = server
-        .get(&format!("/rooms/{}/devices", room1.id))
+        .get(&format!("/houses/{}/rooms/{}/devices", house.id, room1.id))
         .add_header("Authorization", format!("Bearer {}", token))
         .await;
 
@@ -333,7 +333,7 @@ async fn test_get_devices_by_room_id() {
 
     // Get devices for Room 2
     let response = server
-        .get(&format!("/rooms/{}/devices", room2.id))
+        .get(&format!("/houses/{}/rooms/{}/devices", house.id, room2.id))
         .add_header("Authorization", format!("Bearer {}", token))
         .await;
 
@@ -344,11 +344,9 @@ async fn test_get_devices_by_room_id() {
 
     // Get devices for a non-existent room
     let response = server
-        .get(&format!("/rooms/{}/devices", 9999))
+        .get(&format!("/houses/{}/rooms/{}/devices", house.id, 9999))
         .add_header("Authorization", format!("Bearer {}", token))
         .await;
 
-    assert_eq!(response.status_code(), StatusCode::OK);
-    let devices: Vec<Device> = response.json();
-    assert!(devices.is_empty());
+    assert_eq!(response.status_code(), StatusCode::NOT_FOUND);
 }

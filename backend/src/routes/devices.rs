@@ -13,11 +13,14 @@ use crate::{
         create_device, delete_device, get_device_by_id, get_devices_by_house_id,
         get_devices_by_room_id, update_device,
     },
-    repositories::user_houses_repository::UserHousesRepository,
+    repositories::{
+        rooms_repository::RoomsRepository, user_houses_repository::UserHousesRepository,
+    },
     routes::rooms::HouseAccess,
     services::{
         access_control_service::{AccessControlService, AccessControlServiceTrait},
         device::DeviceServiceTrait,
+        rooms::{RoomsService, RoomsServiceTrait},
     },
     AppState,
 };
@@ -25,8 +28,9 @@ use crate::{
 #[derive(Clone)]
 pub struct DeviceRouterState {
     pub device_service: Arc<dyn DeviceServiceTrait + Send + Sync>,
+    pub room_service: Arc<dyn RoomsServiceTrait + Send + Sync>,
     pub app_state: AppState,
-    pub access_control_service: AccessControlService,
+    pub access_control_service: Arc<dyn AccessControlServiceTrait + Send + Sync>,
 }
 
 impl DeviceRouterState {
@@ -38,10 +42,13 @@ impl DeviceRouterState {
             device_repository,
         ));
         let user_houses_repo = Arc::new(UserHousesRepository::new(app_state.db.pool.clone()));
-        let access_control_service = AccessControlService::new(user_houses_repo);
+        let access_control_service = Arc::new(AccessControlService::new(user_houses_repo));
+        let rooms_repository = Arc::new(RoomsRepository::new(app_state.db.pool.clone()));
+        let room_service = Arc::new(RoomsService::new(rooms_repository));
 
         Self {
             device_service,
+            room_service,
             app_state,
             access_control_service,
         }

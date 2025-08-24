@@ -5,7 +5,7 @@ use axum::{
 };
 
 use crate::{
-    errors::Result,
+    errors::{AppError, Result},
     middlewares::validator::ValidatedJson,
     models::rooms::{NewRoom, Room},
     routes::rooms::{HouseAccess, RoomsRouterState},
@@ -97,7 +97,7 @@ where
 pub async fn delete_room<R, H, A>(
     State(state): State<RoomsRouterState<R, H, A>>,
     HouseAccess {
-        house_id: _,
+        house_id,
         user_id: _,
     }: HouseAccess,
     Path(room_id): Path<i64>,
@@ -107,6 +107,12 @@ where
     H: HouseServiceTrait,
     A: crate::services::access_control_service::AccessControlServiceTrait,
 {
+    let room = state.room_service.get_room(room_id).await?;
+
+    if room.house_id != house_id {
+        return Err(AppError::AuthenticationError("Access denied".to_string()));
+    }
+
     state.room_service.delete_room(room_id).await?;
 
     Ok(StatusCode::NO_CONTENT)
@@ -221,6 +227,22 @@ mod tests {
         let mut mock_room_service = MockRoomsServiceTrait::new();
         let mock_house_service = MockHouseServiceTrait::new();
         let mock_access_control_service = MockAccessControlServiceTrait::new();
+        let now = Utc::now();
+
+        let room = Room {
+            id: 1,
+            house_id: 1,
+            name: "Living Room".to_string(),
+            room_type: "living_room".to_string(),
+            created_at: now,
+            updated_at: now,
+        };
+
+        mock_room_service
+            .expect_get_room()
+            .with(eq(1i64))
+            .times(1)
+            .returning(move |_| Ok(room.clone()));
 
         mock_room_service
             .expect_delete_room()
@@ -251,7 +273,7 @@ mod tests {
         let mock_access_control_service = MockAccessControlServiceTrait::new();
 
         mock_room_service
-            .expect_delete_room()
+            .expect_get_room()
             .with(eq(999i64))
             .times(1)
             .returning(|_| Err(AppError::NotFound("Room not found".to_string())));
@@ -273,6 +295,48 @@ mod tests {
         match result.unwrap_err() {
             AppError::NotFound(_) => (),
             _ => panic!("Expected NotFound error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_delete_room_access_denied() {
+        let mut mock_room_service = MockRoomsServiceTrait::new();
+        let mock_house_service = MockHouseServiceTrait::new();
+        let mock_access_control_service = MockAccessControlServiceTrait::new();
+        let now = Utc::now();
+
+        let room = Room {
+            id: 1,
+            house_id: 2, // This room belongs to another house
+            name: "Living Room".to_string(),
+            room_type: "living_room".to_string(),
+            created_at: now,
+            updated_at: now,
+        };
+
+        mock_room_service
+            .expect_get_room()
+            .with(eq(1i64))
+            .times(1)
+            .returning(move |_| Ok(room.clone()));
+
+        let state = RoomsRouterState {
+            room_service: mock_room_service,
+            house_service: mock_house_service,
+            access_control_service: mock_access_control_service,
+        };
+
+        let house_access = HouseAccess {
+            house_id: 1, // User has access to house 1
+            user_id: 1,
+        };
+
+        let result = delete_room(State(state), house_access, Path(1)).await;
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            AppError::AuthenticationError(_) => (),
+            _ => panic!("Expected AuthenticationError"),
         }
     }
 }

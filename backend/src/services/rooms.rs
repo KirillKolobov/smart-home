@@ -15,6 +15,7 @@ pub trait RoomsServiceTrait {
     async fn get_house_rooms(&self, house_id: i64) -> Result<Vec<Room>>;
     async fn create_house_room(&self, house_id: i64, room: NewRoom) -> Result<Room>;
     async fn delete_room(&self, room_id: i64) -> Result<()>;
+    async fn get_room(&self, room_id: i64) -> Result<Room>;
 }
 
 #[derive(Clone)]
@@ -47,5 +48,9 @@ impl RoomsServiceTrait for RoomsService {
 
     async fn delete_room(&self, room_id: i64) -> Result<()> {
         self.rooms_repository.delete_room(room_id).await
+    }
+
+    async fn get_room(&self, room_id: i64) -> Result<Room> {
+        self.rooms_repository.get_room(room_id).await
     }
 }

@@ -13,6 +13,7 @@ pub trait RoomsRepositoryTrait {
     async fn get_house_rooms(&self, house_id: i64) -> Result<Vec<Room>>;
     async fn create_house_room(&self, house_id: i64, room: NewRoom) -> Result<Room>;
     async fn delete_room(&self, room_id: i64) -> Result<()>;
+    async fn get_room(&self, room_id: i64) -> Result<Room>;
 }
 
 #[derive(Clone)]
@@ -69,9 +70,29 @@ impl RoomsRepositoryTrait for RoomsRepository {
             .rows_affected();
 
         if rows_affected == 0 {
-            return Err(AppError::NotFound("House not found".to_string()));
+            return Err(AppError::NotFound("Room not found".to_string()));
         }
 
         Ok(())
+    }
+
+    async fn get_room(&self, room_id: i64) -> Result<Room> {
+        let result = sqlx::query_as!(
+            Room,
+            r#"
+            SELECT id, house_id, name, room_type, created_at, updated_at
+            FROM rooms
+            WHERE id = ($1)
+            "#,
+            room_id
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| match err {
+            sqlx::Error::RowNotFound => AppError::NotFound("Room not found".to_string()),
+            _ => AppError::InternalServerError("Error getting room".to_string()),
+        })?;
+
+        Ok(result)
     }
 }
