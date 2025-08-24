@@ -5,6 +5,7 @@
 
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
+use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod api_doc;
@@ -78,6 +79,8 @@ pub fn create_app(app_state: AppState) -> Router {
     use utoipa::OpenApi;
     use utoipa_swagger_ui::SwaggerUi;
 
+    let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any);
+
     // Create protected routes that require authentication
     let protected_routes = Router::new()
         .nest("/profile", routes::users::users_router(app_state.clone()))
@@ -101,7 +104,8 @@ pub fn create_app(app_state: AppState) -> Router {
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),
             middlewares::auth::auth_middleware,
-        ));
+        ))
+        .layer(cors);
 
     // Create main application router
     Router::new()
