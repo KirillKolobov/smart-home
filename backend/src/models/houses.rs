@@ -14,8 +14,8 @@ pub struct House {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate, PartialEq, Clone)]
 pub struct NewHouse {
-    #[validate(length(min = 3))]
-    pub name: String,
-    #[validate(length(min = 3))]
-    pub address: String,
+    #[validate(required(message = "Name is required"), length(min = 3))]
+    pub name: Option<String>,
+    #[validate(required(message = "Address is required"), length(min = 3))]
+    pub address: Option<String>,
 }

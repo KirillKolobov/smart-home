@@ -1,10 +1,12 @@
 use axum::{
     extract::{Path, State},
+    http::StatusCode,
     Json,
 };
 
 use crate::{
     errors::Result,
+    middlewares::validator::ValidatedJson,
     models::rooms::{NewRoom, Room},
     routes::rooms::{HouseAccess, RoomsRouterState},
     services::{house::HouseServiceTrait, rooms::RoomsServiceTrait},
@@ -62,8 +64,8 @@ where
 pub async fn create_room<R, H, A>(
     State(state): State<RoomsRouterState<R, H, A>>,
     house_access: HouseAccess,
-    Json(payload): Json<NewRoom>,
-) -> Result<Json<Room>>
+    ValidatedJson(payload): ValidatedJson<NewRoom>,
+) -> Result<(StatusCode, Json<Room>)>
 where
     R: RoomsServiceTrait,
     H: HouseServiceTrait,
@@ -74,7 +76,7 @@ where
         .create_house_room(house_access.house_id, payload)
         .await?;
 
-    Ok(Json(rooms))
+    Ok((StatusCode::CREATED, Json(rooms)))
 }
 
 /// Delete room from house
@@ -84,7 +86,7 @@ where
     get,
     path = "/houses/{id}/rooms/{id}",
     responses(
-        (status = 200, description = "Room deleted", body = ()),
+        (status = 204, description = "Room deleted", body = ()),
         (status = 500, description = "Internal Server Error", body = String)
     ),
     security(
@@ -99,7 +101,7 @@ pub async fn delete_room<R, H, A>(
         user_id: _,
     }: HouseAccess,
     Path(room_id): Path<i64>,
-) -> Result<Json<()>>
+) -> Result<StatusCode>
 where
     R: RoomsServiceTrait,
     H: HouseServiceTrait,
@@ -107,7 +109,7 @@ where
 {
     state.room_service.delete_room(room_id).await?;
 
-    Ok(Json(()))
+    Ok(StatusCode::NO_CONTENT)
 }
 
 #[cfg(test)]
@@ -176,8 +178,8 @@ mod tests {
 
         let now = Utc::now();
         let new_room = NewRoom {
-            name: "Bedroom".to_string(),
-            room_type: "bedroom".to_string(),
+            name: Some("Bedroom".to_string()),
+            room_type: Some("bedroom".to_string()),
         };
 
         let room = Room {
@@ -206,10 +208,10 @@ mod tests {
             user_id: 1,
         };
 
-        let result = create_room(State(state), house_access, Json(new_room)).await;
+        let result = create_room(State(state), house_access, ValidatedJson(new_room)).await;
 
         assert!(result.is_ok());
-        let Json(created_room) = result.unwrap();
+        let Json(created_room) = result.unwrap().1;
         assert_eq!(created_room.id, 1);
         assert_eq!(created_room.name, "Bedroom");
     }
@@ -240,7 +242,6 @@ mod tests {
         let result = delete_room(State(state), house_access, Path(1)).await;
 
         assert!(result.is_ok());
-        let Json(()) = result.unwrap();
     }
 
     #[tokio::test]

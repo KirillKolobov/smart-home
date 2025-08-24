@@ -157,7 +157,7 @@ pub async fn delete_device(
 )]
 pub async fn get_devices_by_room_id(
     State(router_state): State<Arc<DeviceRouterState>>,
-    Path(room_id): Path<i64>,
+    Path((_, room_id)): Path<(i64, i64)>,
 ) -> Result<Json<Vec<Device>>> {
     let devices = router_state
         .device_service

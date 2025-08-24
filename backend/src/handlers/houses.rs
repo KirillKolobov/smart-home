@@ -104,7 +104,7 @@ pub async fn create_house(
         ("id" = i64, Path, description = "House ID")
     ),
     responses(
-        (status = 200, description = "House deleted successfully", body = ()),
+        (status = 204, description = "House deleted successfully", body = ()),
         (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
@@ -117,10 +117,10 @@ pub async fn create_house(
 pub async fn delete_house(
     State(state): State<HousesRouterState>,
     HouseAccess { house_id, .. }: HouseAccess,
-) -> Result<Json<()>> {
+) -> Result<StatusCode> {
     state.house_service.delete_house(house_id).await?;
 
-    Ok(Json(()))
+    Ok(StatusCode::NO_CONTENT)
 }
 
 #[cfg(test)]
@@ -221,15 +221,18 @@ mod tests {
         let mut mock_house_repo = MockHouseRepositoryTrait::new();
         let mut mock_user_house_repo = MockUserHousesRepositoryTrait::new();
 
+        let name = "New Test House".to_string();
+        let address = "456 Elm St, Anytown, USA".to_string();
+
         let new_house = NewHouse {
-            name: "New Test House".to_string(),
-            address: "456 Elm St, Anytown, USA".to_string(),
+            name: Some(name.clone()),
+            address: Some(address.clone()),
         };
 
         let created_house = House {
             id: 42,
-            name: new_house.name.clone(),
-            address: new_house.address.clone(),
+            name: name,
+            address: address.clone(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -240,6 +243,12 @@ mod tests {
         };
 
         let cloned_created_house = created_house.clone();
+
+        mock_house_repo
+            .expect_find_house_by_address()
+            .with(eq(address))
+            .times(1)
+            .returning(|_| Ok(None));
 
         mock_user_house_repo
             .expect_add_house_to_user()
@@ -301,7 +310,6 @@ mod tests {
         .await;
 
         assert!(result.is_ok());
-        let Json(()) = result.unwrap();
     }
 
     #[tokio::test]

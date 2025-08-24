@@ -172,6 +172,7 @@ mod tests {
         };
 
         mock_repo.expect_find_by_email().returning(|_| Ok(None));
+        mock_repo.expect_find_by_phone().returning(|_| Ok(None));
 
         mock_repo
             .expect_create_user()
@@ -215,6 +216,7 @@ mod tests {
         let config = create_test_config();
 
         mock_repo.expect_find_by_email().returning(|_| Ok(None));
+        mock_repo.expect_find_by_phone().returning(|_| Ok(None));
 
         mock_repo
             .expect_create_user()

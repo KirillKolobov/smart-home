@@ -324,6 +324,12 @@ mod tests {
             .returning(|_| Ok(None));
 
         mock_repo
+            .expect_find_by_phone()
+            .with(mockall::predicate::eq("1234567890"))
+            .times(1)
+            .returning(|_| Ok(None));
+
+        mock_repo
             .expect_create_user()
             .times(1)
             .returning(move |_| Ok(expected_user.clone()));
@@ -370,6 +376,12 @@ mod tests {
                     last_login_at: None,
                 }))
             });
+
+        mock_repo
+            .expect_find_by_phone()
+            .with(mockall::predicate::eq("1234567890"))
+            .times(1)
+            .returning(|_| Ok(None));
 
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 

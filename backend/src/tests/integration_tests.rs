@@ -1,3 +1,4 @@
+use crate::create_app;
 #[cfg(test)]
 use crate::{
     models::users::User,
@@ -16,17 +17,12 @@ async fn create_test_app() -> Result<Router, Box<dyn std::error::Error>> {
 
     let app_state = AppState::new(crate::db::Database::new(pool), config);
 
-    let app = Router::new()
-        .merge(crate::routes::auth::auth_router(app_state.clone()))
-        .nest(
-            "/users",
-            crate::routes::users::users_router(app_state.clone()),
-        );
+    let app = create_app(app_state);
 
     Ok(app)
 }
 
-async fn register_unique_user(server: &TestServer) -> (String, String, String, i32) {
+async fn register_unique_user(server: &TestServer) -> (String, String, String, i64) {
     // email, phone, token, user_id
     let unique_id = Uuid::new_v4();
     let email = format!("test_{}@example.com", unique_id);
@@ -52,7 +48,7 @@ async fn register_unique_user(server: &TestServer) -> (String, String, String, i
     assert_eq!(response.status_code(), StatusCode::OK);
     let auth_response: serde_json::Value = response.json();
     let token = auth_response["token"].as_str().unwrap().to_string();
-    let user_id = auth_response["user_id"].as_i64().unwrap() as i32;
+    let user_id = auth_response["user_id"].as_i64().unwrap();
 
     (email, phone, token, user_id)
 }
