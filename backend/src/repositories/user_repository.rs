@@ -6,7 +6,7 @@ use crate::{
     errors::{AppError, Result},
     models::{
         auth::{PasswordHash, RegisterUser},
-        users::{User, UserEntity, UserRole},
+        users::{User, UserRole},
     },
 };
 
@@ -14,10 +14,10 @@ use crate::{
 #[async_trait]
 pub trait UserRepositoryTrait {
     async fn create_user(&self, user: RegisterUser) -> Result<User>;
-    async fn get_user_by_id(&self, id: i64) -> Result<UserEntity>;
-    async fn get_user_by_email(&self, email: &str) -> Result<UserEntity>;
-    async fn find_by_email(&self, email: &str) -> Result<Option<UserEntity>>;
-    async fn find_by_phone(&self, phone: &str) -> Result<Option<UserEntity>>;
+    async fn get_user_by_id(&self, id: i64) -> Result<User>;
+    async fn get_user_by_email(&self, email: &str) -> Result<User>;
+    async fn find_by_email(&self, email: &str) -> Result<Option<User>>;
+    async fn find_by_phone(&self, phone: &str) -> Result<Option<User>>;
     async fn get_password_hash_by_email(&self, email: &str) -> Result<PasswordHash>;
     async fn delete_user(&self, id: i64) -> Result<()>;
     async fn update_last_login(&self, id: i64) -> Result<()>;
@@ -43,7 +43,7 @@ impl UserRepositoryTrait for UserRepository {
             r#"
             INSERT INTO users (first_name, last_name, phone, email, password_hash, role)
             VALUES ($1, $2, $3, $4, $5, 'user')
-            RETURNING id, first_name, last_name, phone, email
+            RETURNING id, first_name, last_name, phone, email, role as "role: UserRole", created_at, updated_at, last_login_at
             "#,
             user.first_name,
             user.last_name,
@@ -57,9 +57,9 @@ impl UserRepositoryTrait for UserRepository {
         Ok(result)
     }
 
-    async fn get_user_by_id(&self, id: i64) -> Result<UserEntity> {
+    async fn get_user_by_id(&self, id: i64) -> Result<User> {
         let result = sqlx::query_as!(
-            UserEntity,
+            User,
             r#"
             SELECT id, first_name, last_name, phone, email, role as "role: UserRole", created_at, updated_at, last_login_at
             FROM users
@@ -73,9 +73,9 @@ impl UserRepositoryTrait for UserRepository {
         Ok(result)
     }
 
-    async fn get_user_by_email(&self, email: &str) -> Result<UserEntity> {
+    async fn get_user_by_email(&self, email: &str) -> Result<User> {
         let result = sqlx::query_as!(
-            UserEntity,
+            User,
             r#"
             SELECT id, first_name, last_name, phone, email, role as "role: UserRole", created_at, updated_at, last_login_at
             FROM users
@@ -89,9 +89,9 @@ impl UserRepositoryTrait for UserRepository {
         Ok(result)
     }
 
-    async fn find_by_email(&self, email: &str) -> Result<Option<UserEntity>> {
+    async fn find_by_email(&self, email: &str) -> Result<Option<User>> {
         let result = sqlx::query_as!(
-            UserEntity,
+            User,
             r#"
             SELECT id, first_name, last_name, phone, email, role as "role: UserRole", created_at, updated_at, last_login_at
             FROM users
@@ -162,9 +162,9 @@ impl UserRepositoryTrait for UserRepository {
         Ok(result.exists.unwrap_or(false))
     }
 
-    async fn find_by_phone(&self, phone: &str) -> Result<Option<UserEntity>> {
+    async fn find_by_phone(&self, phone: &str) -> Result<Option<User>> {
         let result = sqlx::query_as!(
-            UserEntity,
+            User,
             r#"
             SELECT id, first_name, last_name, phone, email, role as "role: UserRole", created_at, updated_at, last_login_at
             FROM users
@@ -181,6 +181,8 @@ impl UserRepositoryTrait for UserRepository {
 
 #[cfg(test)]
 mod tests {
+    use chrono::Utc;
+
     use super::*;
     use crate::models::auth::RegisterUser;
 
@@ -202,6 +204,10 @@ mod tests {
             last_name: "Doe".to_string(),
             phone: "1234567890".to_string(),
             email: "test@example.com".to_string(),
+            created_at: Utc::now(),
+            last_login_at: None,
+            role: UserRole::User,
+            updated_at: Utc::now(),
         };
 
         mock_repo

@@ -45,7 +45,6 @@ impl Modify for SecurityAddon {
             models::auth::LoginRequest,
             models::auth::AuthResponse,
             models::users::User,
-            models::users::UserProfile,
             models::auth::RegisterUser,
             models::houses::NewHouse,
             models::houses::House,

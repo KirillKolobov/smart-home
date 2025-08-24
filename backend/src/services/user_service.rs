@@ -3,17 +3,13 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use mockall::automock;
 
-use crate::{
-    errors::Result,
-    models::users::{User, UserProfile},
-    repositories::UserRepositoryTrait,
-};
+use crate::{errors::Result, models::users::User, repositories::UserRepositoryTrait};
 
 #[automock]
 #[async_trait]
 pub trait UserServiceTrait {
     async fn get_user_by_id(&self, id: i64) -> Result<User>;
-    async fn get_user_profile(&self, id: i64) -> Result<UserProfile>;
+    async fn get_user_profile(&self, id: i64) -> Result<User>;
     async fn delete_user(&self, id: i64) -> Result<()>;
     async fn user_exists(&self, email: &str) -> Result<bool>;
 }
@@ -38,11 +34,10 @@ impl UserServiceTrait for UserService {
         Ok(user)
     }
 
-    async fn get_user_profile(&self, id: i64) -> Result<UserProfile> {
+    async fn get_user_profile(&self, id: i64) -> Result<User> {
         let user_entity = self.user_repository.get_user_by_id(id).await?;
-        let profile = UserProfile::from(user_entity);
 
-        Ok(profile)
+        Ok(user_entity)
     }
 
     async fn delete_user(&self, id: i64) -> Result<()> {
@@ -61,7 +56,7 @@ mod tests {
     use super::*;
     use crate::{
         errors::AppError,
-        models::users::{UserEntity, UserRole},
+        models::users::{User, UserRole},
         repositories::user_repository::MockUserRepositoryTrait,
     };
     use chrono::Utc;
@@ -70,7 +65,7 @@ mod tests {
     async fn test_get_user_by_id_success() {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
-        let user_entity = UserEntity {
+        let user_entity = User {
             id: 1,
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
@@ -125,7 +120,7 @@ mod tests {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
         let now = Utc::now();
-        let user_entity = UserEntity {
+        let user_entity = User {
             id: 1,
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),

@@ -1,7 +1,6 @@
-use crate::create_app;
+use crate::{create_app, models::auth::AuthResponse};
 #[cfg(test)]
 use crate::{
-    models::users::User,
     tests::{create_test_config, setup_test_database},
     AppState,
 };
@@ -48,7 +47,7 @@ async fn register_unique_user(server: &TestServer) -> (String, String, String, i
     assert_eq!(response.status_code(), StatusCode::OK);
     let auth_response: serde_json::Value = response.json();
     let token = auth_response["token"].as_str().unwrap().to_string();
-    let user_id = auth_response["user_id"].as_i64().unwrap();
+    let user_id = auth_response["user"]["id"].as_i64().unwrap();
 
     (email, phone, token, user_id)
 }
@@ -76,11 +75,11 @@ async fn test_user_registration_and_login_flow() {
 
     assert_eq!(response.status_code(), StatusCode::CREATED);
 
-    let user: User = response.json();
-    assert_eq!(user.first_name, "John");
-    assert_eq!(user.last_name, "Doe");
-    assert_eq!(user.phone, phone);
-    assert_eq!(user.email, email);
+    let resp: AuthResponse = response.json();
+    assert_eq!(resp.user.first_name, "John");
+    assert_eq!(resp.user.last_name, "Doe");
+    assert_eq!(resp.user.phone, phone);
+    assert_eq!(resp.user.email, email);
 
     // Test user login
     let login_payload = json!({
@@ -94,7 +93,7 @@ async fn test_user_registration_and_login_flow() {
 
     let auth_response: serde_json::Value = response.json();
     assert!(auth_response["token"].is_string());
-    assert!(auth_response["user_id"].is_number());
+    assert!(auth_response["user"]["id"].is_number());
 }
 
 #[tokio::test] // Requires test database setup

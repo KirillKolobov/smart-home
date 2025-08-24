@@ -78,7 +78,7 @@ async fn register_and_login_user(server: &TestServer, _: &PgPool) -> (String, i6
     assert_eq!(response.status_code(), StatusCode::OK);
     let auth_response: serde_json::Value = response.json();
     let token = auth_response["token"].as_str().unwrap().to_string();
-    let user_id = auth_response["user_id"].as_i64().unwrap();
+    let user_id = auth_response["user"]["id"].as_i64().unwrap();
     (token, user_id)
 }
 

@@ -18,10 +18,12 @@ pub struct LoginRequest {
     pub password: String,
 }
 
-#[derive(Debug, Serialize, ToSchema)]
+use crate::models::users::User;
+
+#[derive(Debug, Serialize, ToSchema, Deserialize, Clone)]
 pub struct AuthResponse {
     pub token: String,
-    pub user_id: i64,
+    pub user: User,
 }
 
 #[derive(Debug, FromRow, Clone)]

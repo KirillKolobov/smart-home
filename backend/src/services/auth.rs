@@ -20,7 +20,7 @@ use crate::{
 #[async_trait]
 pub trait AuthServiceTrait {
     async fn login(&self, login_request: LoginRequest) -> Result<AuthResponse>;
-    async fn register(&self, register_user: RegisterUser) -> Result<User>;
+    async fn register(&self, register_user: RegisterUser) -> Result<AuthResponse>; // Changed return type
     async fn validate_token(&self, token: &str) -> Result<Claims>;
     fn generate_token(&self, user_id: i64) -> Result<String>;
 }
@@ -87,14 +87,12 @@ impl AuthService {
 #[async_trait]
 impl AuthServiceTrait for AuthService {
     async fn login(&self, login_request: LoginRequest) -> Result<AuthResponse> {
-        // Get user password hash
         let password_data = self
             .user_repository
             .get_password_hash_by_email(login_request.email.as_ref())
             .await
             .map_err(|_| AppError::AuthenticationError("User not found".to_string()))?;
 
-        // Verify password
         if !self
             .verify_password(
                 login_request.password.as_ref(),
@@ -107,7 +105,6 @@ impl AuthServiceTrait for AuthService {
             ));
         }
 
-        // Update last login
         if self
             .user_repository
             .update_last_login(password_data.id)
@@ -119,16 +116,20 @@ impl AuthServiceTrait for AuthService {
             ));
         }
 
-        // Generate token
         let token = self.generate_token(password_data.id)?;
+
+        let user = self
+            .user_repository
+            .get_user_by_id(password_data.id)
+            .await?;
 
         Ok(AuthResponse {
             token,
-            user_id: password_data.id,
+            user: User::from(user),
         })
     }
 
-    async fn register(&self, register_user: RegisterUser) -> Result<User> {
+    async fn register(&self, register_user: RegisterUser) -> Result<AuthResponse> {
         let email = register_user.email.as_ref();
         let phone = register_user.phone.as_ref();
         self.validate_unique_email_and_phone(email, phone).await?;
@@ -140,8 +141,9 @@ impl AuthServiceTrait for AuthService {
         new_user.password = hashed_password;
 
         let user = self.user_repository.create_user(new_user).await?;
+        let token = self.generate_token(user.id)?;
 
-        Ok(user)
+        Ok(AuthResponse { token, user })
     }
 
     async fn validate_token(&self, token: &str) -> Result<Claims> {
@@ -186,7 +188,7 @@ mod tests {
 
     use super::*;
     use crate::models::auth::PasswordHash;
-    use crate::models::users::{UserEntity, UserRole};
+    use crate::models::users::{User, UserRole};
     use crate::repositories::user_repository::MockUserRepositoryTrait;
 
     fn create_test_config() -> Config {
@@ -214,6 +216,24 @@ mod tests {
             password_hash: password_hash.clone(),
         };
 
+        let user = User {
+            id: 1,
+            email: "test@example.com".to_string(),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string(),
+            role: UserRole::User,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            last_login_at: None,
+            phone: "1234567890".to_string(),
+        };
+
+        mock_repo
+            .expect_get_user_by_id()
+            .with(eq(1i64))
+            .times(1)
+            .returning(move |_| Ok(user.clone()));
+
         mock_repo
             .expect_get_password_hash_by_email()
             .with(mockall::predicate::eq("test@example.com"))
@@ -237,7 +257,7 @@ mod tests {
         assert!(result.is_ok());
 
         let auth_response = result.unwrap();
-        assert_eq!(auth_response.user_id, 1);
+        assert_eq!(auth_response.user.id, 1);
         assert!(!auth_response.token.is_empty());
     }
 
@@ -316,6 +336,10 @@ mod tests {
             last_name: "Doe".to_string(),
             phone: "1234567890".to_string(),
             email: "test@example.com".to_string(),
+            created_at: Utc::now(),
+            last_login_at: None,
+            role: UserRole::User,
+            updated_at: Utc::now(),
         };
 
         mock_repo
@@ -348,11 +372,11 @@ mod tests {
         let result = auth_service.register(register_request).await;
         assert!(result.is_ok());
 
-        let user = result.unwrap();
-        assert_eq!(user.first_name, "John");
-        assert_eq!(user.last_name, "Doe");
-        assert_eq!(user.phone, "1234567890");
-        assert_eq!(user.email, "test@example.com");
+        let resp = result.unwrap();
+        assert_eq!(resp.user.first_name, "John");
+        assert_eq!(resp.user.last_name, "Doe");
+        assert_eq!(resp.user.phone, "1234567890");
+        assert_eq!(resp.user.email, "test@example.com");
     }
 
     #[tokio::test]
@@ -365,7 +389,7 @@ mod tests {
             .with(mockall::predicate::eq("existing@example.com"))
             .times(1)
             .returning(|_| {
-                Ok(Some(UserEntity {
+                Ok(Some(User {
                     id: 1,
                     email: "existing@example.com".to_string(),
                     first_name: "John".to_string(),
@@ -414,7 +438,7 @@ mod tests {
             .with(eq(1))
             .times(1)
             .returning(|_| {
-                Ok(UserEntity {
+                Ok(User {
                     id: 1,
                     email: "test@example.com".to_string(),
                     first_name: "John".to_string(),
@@ -444,7 +468,7 @@ mod tests {
         let mut mock_repo = MockUserRepositoryTrait::new();
         let config = create_test_config();
 
-        let user_entity = UserEntity {
+        let user_entity = User {
             id: 1,
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),

@@ -1,10 +1,7 @@
 use crate::{
     errors::{Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
-    models::{
-        auth::{AuthResponse, LoginRequest, RegisterUser},
-        users::User,
-    },
+    models::auth::{AuthResponse, LoginRequest, RegisterUser},
     routes::auth::AuthRouterState,
     services::AuthServiceTrait,
 };
@@ -42,7 +39,7 @@ pub async fn login(
     path = "/auth/signup",
     request_body = RegisterUser,
     responses(
-        (status = 201, description = "User created successfully", body = User),
+        (status = 201, description = "User created successfully", body = AuthResponse),
         (status = 400, description = "Bad Request - Invalid input or user already exists", body = ValidationErrorResponse),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -51,10 +48,10 @@ pub async fn login(
 pub async fn register(
     State(state): State<AuthRouterState>,
     ValidatedJson(payload): ValidatedJson<RegisterUser>,
-) -> Result<(StatusCode, Json<User>)> {
-    let user = state.auth_service.register(payload).await?;
+) -> Result<(StatusCode, Json<AuthResponse>)> {
+    let auth_response = state.auth_service.register(payload).await?;
 
-    Ok((StatusCode::CREATED, Json(user)))
+    Ok((StatusCode::CREATED, Json(auth_response)))
 }
 
 #[cfg(test)]
@@ -63,11 +60,16 @@ mod tests {
 
     use super::*;
     use crate::{
-        config::Config, errors::AppError, repositories::user_repository::MockUserRepositoryTrait,
+        config::Config,
+        errors::AppError,
+        models::users::{User, UserRole},
+        repositories::user_repository::MockUserRepositoryTrait,
         services::auth::AuthService,
     };
     use axum::{extract::State, http::StatusCode};
     use bcrypt::{hash, DEFAULT_COST};
+    use chrono::Utc;
+    use mockall::predicate::eq;
     use validator::ValidationErrors;
 
     fn create_test_config() -> Config {
@@ -94,6 +96,23 @@ mod tests {
             id: 1,
             password_hash: password_hash.clone(),
         };
+
+        let user = User {
+            id: 1,
+            email: "test@example.com".to_string(),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string(),
+            role: UserRole::User,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            last_login_at: None,
+            phone: "1234567890".to_string(),
+        };
+
+        mock_repo
+            .expect_get_user_by_id()
+            .with(eq(1))
+            .return_once(move |_| Ok(user));
 
         mock_repo
             .expect_get_password_hash_by_email()
@@ -170,6 +189,10 @@ mod tests {
             last_name: "Doe".to_string(),
             phone: "1234567890".to_string(),
             email: "test@example.com".to_string(),
+            created_at: Utc::now(),
+            last_login_at: None,
+            role: UserRole::User,
+            updated_at: Utc::now(),
         };
 
         mock_repo.expect_find_by_email().returning(|_| Ok(None));
@@ -203,12 +226,12 @@ mod tests {
         let result = register(State(state), ValidatedJson(register_request)).await;
         assert!(result.is_ok());
 
-        let (status, Json(user)) = result.unwrap();
+        let (status, Json(resp)) = result.unwrap();
         assert_eq!(status, StatusCode::CREATED);
-        assert_eq!(user.first_name, "John");
-        assert_eq!(user.last_name, "Doe");
-        assert_eq!(user.phone, "1234567890");
-        assert_eq!(user.email, "test@example.com");
+        assert_eq!(resp.user.first_name, "John");
+        assert_eq!(resp.user.last_name, "Doe");
+        assert_eq!(resp.user.phone, "1234567890");
+        assert_eq!(resp.user.email, "test@example.com");
     }
 
     #[tokio::test]

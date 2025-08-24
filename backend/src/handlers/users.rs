@@ -1,8 +1,7 @@
 use axum::{extract::State, Extension, Json};
 
 use crate::{
-    errors::Result, models::users::UserProfile, routes::users::UserRouterState,
-    services::UserServiceTrait,
+    errors::Result, models::users::User, routes::users::UserRouterState, services::UserServiceTrait,
 };
 
 /// Get user profile by ID endpoint
@@ -12,7 +11,7 @@ use crate::{
     get,
     path = "/profile",
     responses(
-        (status = 200, description = "User profile found", body = UserProfile),
+        (status = 200, description = "User profile found", body = User),
         (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "User not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
@@ -25,7 +24,7 @@ use crate::{
 pub async fn get_user_profile(
     State(state): State<UserRouterState>,
     Extension(user_id): Extension<i64>,
-) -> Result<Json<UserProfile>> {
+) -> Result<Json<User>> {
     let profile = state.user_service.get_user_profile(user_id).await?;
 
     Ok(Json(profile))
@@ -37,7 +36,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        models::users::{UserEntity, UserRole},
+        models::users::{User, UserRole},
         repositories::user_repository::MockUserRepositoryTrait,
         routes::users::UserRouterState,
         services::user_service::UserService,
@@ -50,7 +49,7 @@ mod tests {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
         let now = Utc::now();
-        let user_entity = UserEntity {
+        let user_entity = User {
             id: 1,
             first_name: "John".to_string(),
             last_name: "Doe".to_string(),
