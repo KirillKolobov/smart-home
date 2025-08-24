@@ -30,8 +30,8 @@ pub fn auth_router(app_state: AppState) -> Router {
     let auth_router_state = AuthRouterState::new(app_state);
 
     Router::new()
-        .route("/login", post(login))
-        .route("/register", post(register))
+        .route("/auth/login", post(login))
+        .route("/auth/signup", post(register))
         .with_state(auth_router_state)
 }
 

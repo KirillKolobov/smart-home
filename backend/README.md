@@ -140,10 +140,10 @@ src/
 
 ### Authentication
 
-| Method | Endpoint    | Description       | Auth Required |
-| ------ | ----------- | ----------------- | ------------- |
-| POST   | `/register` | Register new user | No            |
-| POST   | `/login`    | Login user        | No            |
+| Method | Endpoint       | Description       | Auth Required |
+| ------ | -------------- | ----------------- | ------------- |
+| POST   | `/auth/signup` | Register new user | No            |
+| POST   | `/auth/login`       | Login user        | No            |
 
 ### Users
 

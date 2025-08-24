@@ -37,14 +37,14 @@ async fn register_unique_user(server: &TestServer) -> (String, String, String, i
         "password": password
     });
 
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
     assert_eq!(response.status_code(), StatusCode::CREATED);
 
     let login_payload = json!({
         "email": email,
         "password": password
     });
-    let response = server.post("/login").json(&login_payload).await;
+    let response = server.post("/auth/login").json(&login_payload).await;
     assert_eq!(response.status_code(), StatusCode::OK);
     let auth_response: serde_json::Value = response.json();
     let token = auth_response["token"].as_str().unwrap().to_string();
@@ -72,7 +72,7 @@ async fn test_user_registration_and_login_flow() {
         "password": password
     });
 
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::CREATED);
 
@@ -88,7 +88,7 @@ async fn test_user_registration_and_login_flow() {
         "password": password
     });
 
-    let response = server.post("/login").json(&login_payload).await;
+    let response = server.post("/auth/login").json(&login_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::OK);
 
@@ -130,7 +130,7 @@ async fn test_invalid_credentials() {
         "password": "wrongpassword"
     });
 
-    let response = server.post("/login").json(&login_payload).await;
+    let response = server.post("/auth/login").json(&login_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::UNAUTHORIZED);
 }
@@ -154,12 +154,12 @@ async fn test_duplicate_user_registration() {
     });
 
     // First registration should succeed
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::CREATED);
 
     // Second registration with same email should fail
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::BAD_REQUEST);
 }
@@ -182,7 +182,7 @@ async fn test_invalid_input_validation() {
         "password": "password123"
     });
 
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::BAD_REQUEST);
 
@@ -195,7 +195,7 @@ async fn test_invalid_input_validation() {
         "password": "123"
     });
 
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::BAD_REQUEST);
 
@@ -208,7 +208,7 @@ async fn test_invalid_input_validation() {
         "password": "password123"
     });
 
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
 
     assert_eq!(response.status_code(), StatusCode::BAD_REQUEST);
 }

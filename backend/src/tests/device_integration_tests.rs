@@ -67,14 +67,14 @@ async fn register_and_login_user(server: &TestServer, _: &PgPool) -> (String, i6
         "email": email,
         "password": "password123"
     });
-    let response = server.post("/register").json(&register_payload).await;
+    let response = server.post("/auth/signup").json(&register_payload).await;
     assert_eq!(response.status_code(), StatusCode::CREATED);
 
     let login_payload = json!({
         "email": email,
         "password": "password123"
     });
-    let response = server.post("/login").json(&login_payload).await;
+    let response = server.post("/auth/login").json(&login_payload).await;
     assert_eq!(response.status_code(), StatusCode::OK);
     let auth_response: serde_json::Value = response.json();
     let token = auth_response["token"].as_str().unwrap().to_string();

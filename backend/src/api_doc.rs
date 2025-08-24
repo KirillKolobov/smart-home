@@ -97,8 +97,8 @@ pub fn generate_openapi_json() -> String {
 //         let json = generate_openapi_json();
 //         assert!(!json.is_empty());
 //         assert!(json.contains("Smart Home Backend API"));
-//         assert!(json.contains("/login"));
-//         assert!(json.contains("/register"));
+//         assert!(json.contains("/auth/login"));
+//         assert!(json.contains("/auth/signup"));
 //         assert!(json.contains("/users"));
 //         assert!(json.contains("/health"));
 //     }

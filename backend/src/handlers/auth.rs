@@ -15,7 +15,7 @@ use axum::{extract::State, http::StatusCode, Json};
 /// Authenticates a user with email and password, returning a JWT token on success.
 #[utoipa::path(
     post,
-    path = "/login",
+    path = "/auth/login",
     request_body = LoginRequest,
     responses(
         (status = 200, description = "Successful login", body = AuthResponse),
@@ -39,7 +39,7 @@ pub async fn login(
 /// Creates a new user account with the provided information.
 #[utoipa::path(
     post,
-    path = "/register",
+    path = "/auth/signup",
     request_body = RegisterUser,
     responses(
         (status = 201, description = "User created successfully", body = User),
