@@ -57,7 +57,7 @@ impl DeviceRepositoryTrait for DeviceRepository {
             FROM devices
             WHERE id = $1
             "#,
-            id as i32
+            id
         )
         .fetch_one(&self.pool)
         .await
@@ -86,7 +86,7 @@ impl DeviceRepositoryTrait for DeviceRepository {
             updated_device.name,
             updated_device.device_type,
             updated_device.room_id,
-            id as i32
+            id
         )
         .fetch_one(&self.pool)
         .await
@@ -106,7 +106,7 @@ impl DeviceRepositoryTrait for DeviceRepository {
             DELETE FROM devices
             WHERE id = $1
             "#,
-            id as i32
+            id
         )
         .execute(&self.pool)
         .await?
@@ -131,7 +131,7 @@ impl DeviceRepositoryTrait for DeviceRepository {
             WHERE room_id = $1
             ORDER BY name
             "#,
-            room_id as i32
+            room_id
         )
         .fetch_all(&self.pool)
         .await?;
@@ -151,7 +151,7 @@ impl DeviceRepositoryTrait for DeviceRepository {
                 WHERE house_id = $1
             )
             "#,
-            house_id as i32
+            house_id
         )
         .fetch_all(&self.pool)
         .await?;

@@ -200,11 +200,28 @@ setup_test_db() {
     export DATABASE_URL="postgres://$DB_USER:$DB_PASS@$DB_HOST:$DB_PORT/$DB_NAME"
 
     if command -v sqlx &> /dev/null; then
-        sqlx migrate run
-        print_success "Test database setup completed!"
+        if sqlx migrate run; then
+            print_success "Migrations applied successfully!"
+            print_success "Test database setup completed!"
+        else
+            print_warning "Migrations failed. Recreating database..."
+
+            PGPASSWORD=$DB_PASS dropdb -h $DB_HOST -p $DB_PORT -U $DB_USER $DB_NAME --if-exists
+            PGPASSWORD=$DB_PASS createdb -h $DB_HOST -p $DB_PORT -U $DB_USER $DB_NAME
+
+            if sqlx migrate run; then
+                print_success "Migrations applied successfully after database recreation!"
+                print_success "Test database setup completed!"
+            else
+                print_error "Migrations failed even after database recreation!"
+                print_error "Please check your migration files for errors."
+                return 1
+            fi
+        fi
     else
         print_warning "sqlx-cli not found. Please run migrations manually."
         print_info "Install with: cargo install sqlx-cli"
+        return 1
     fi
 }
 

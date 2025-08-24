@@ -6,10 +6,10 @@ use validator::Validate;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct Device {
-    pub id: i32,
+    pub id: i64,
     pub name: String,
     pub device_type: String,
-    pub room_id: i32,
+    pub room_id: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -19,7 +19,7 @@ pub struct CreateDevice {
     #[validate(length(min = 1, message = "Name cannot be empty"))]
     pub name: String,
     pub device_type: String,
-    pub room_id: i32,
+    pub room_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate, ToSchema)]
@@ -27,5 +27,5 @@ pub struct UpdateDevice {
     #[validate(length(min = 1, message = "Name cannot be empty"))]
     pub name: Option<String>,
     pub device_type: Option<String>,
-    pub room_id: Option<i32>,
+    pub room_id: Option<i64>,
 }

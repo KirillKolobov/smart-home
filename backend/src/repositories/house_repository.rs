@@ -54,7 +54,7 @@ impl HouseRepositoryTrait for HouseRepository {
             SELECT id, name, address, created_at, updated_at FROM houses
             WHERE id = ($1)
             "#,
-            id as i32
+            id
         )
         .fetch_one(&self.pool)
         .await?;
@@ -71,7 +71,7 @@ impl HouseRepositoryTrait for HouseRepository {
             JOIN user_houses uh ON h.id = uh.house_id
             WHERE uh.user_id = ($1)
             "#,
-            user_id as i32
+            user_id
         )
         .fetch_all(&self.pool)
         .await?;
@@ -80,7 +80,7 @@ impl HouseRepositoryTrait for HouseRepository {
     }
 
     async fn delete_house(&self, id: i64) -> Result<()> {
-        let rows_affected = sqlx::query!("DELETE FROM houses WHERE id = $1", id as i32)
+        let rows_affected = sqlx::query!("DELETE FROM houses WHERE id = $1", id)
             .execute(&self.pool)
             .await?
             .rows_affected();

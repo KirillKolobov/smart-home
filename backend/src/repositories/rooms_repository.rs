@@ -36,7 +36,7 @@ impl RoomsRepositoryTrait for RoomsRepository {
             FROM rooms
             WHERE house_id = ($1)
             "#,
-            house_id as i32
+            house_id
         )
         .fetch_all(&self.pool)
         .await?;
@@ -52,7 +52,7 @@ impl RoomsRepositoryTrait for RoomsRepository {
             VALUES ($1, $2, $3)
             RETURNING id, house_id, name, room_type, created_at, updated_at
             "#,
-            house_id as i32,
+            house_id,
             new_room.name,
             new_room.room_type
         )
@@ -63,7 +63,7 @@ impl RoomsRepositoryTrait for RoomsRepository {
     }
 
     async fn delete_room(&self, room_id: i64) -> Result<()> {
-        let rows_affected = sqlx::query!("DELETE FROM rooms WHERE id = $1", room_id as i32)
+        let rows_affected = sqlx::query!("DELETE FROM rooms WHERE id = $1", room_id)
             .execute(&self.pool)
             .await?
             .rows_affected();

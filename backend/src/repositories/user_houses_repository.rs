@@ -32,8 +32,8 @@ impl UserHousesRepositoryTrait for UserHousesRepository {
             VALUES ($1, $2)
             RETURNING user_id, house_id
             "#,
-            user_id as i32,
-            house_id as i32
+            user_id,
+            house_id
         )
         .fetch_one(&self.pool)
         .await?;
@@ -48,8 +48,8 @@ impl UserHousesRepositoryTrait for UserHousesRepository {
             SELECT * FROM user_houses
             WHERE user_id = $1 AND house_id = $2
             "#,
-            user_id as i32,
-            house_id as i32
+            user_id,
+            house_id
         )
         .fetch_optional(&self.pool)
         .await?

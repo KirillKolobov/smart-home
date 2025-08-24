@@ -65,7 +65,7 @@ impl UserRepositoryTrait for UserRepository {
             FROM users
             WHERE id = $1
             "#,
-            id as i32
+            id
         )
         .fetch_one(&self.pool)
         .await?;
@@ -123,7 +123,7 @@ impl UserRepositoryTrait for UserRepository {
             DELETE FROM users
             WHERE id = $1
             "#,
-            id as i32
+            id
         )
         .execute(&self.pool)
         .await?
@@ -143,7 +143,7 @@ impl UserRepositoryTrait for UserRepository {
             SET last_login_at = NOW()
             WHERE id = $1
             "#,
-            id as i32
+            id
         )
         .execute(&self.pool)
         .await?;
