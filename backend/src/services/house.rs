@@ -54,7 +54,7 @@ impl HouseServiceTrait for HouseService {
     async fn create_house(&self, user_id: i64, new_house: NewHouse) -> Result<House> {
         let house = self
             .house_repository
-            .find_house_by_address(new_house.address.clone().unwrap())
+            .find_house_by_address(new_house.address.clone())
             .await?;
         if house.is_some() {
             let mut errors = ValidationErrors::new();

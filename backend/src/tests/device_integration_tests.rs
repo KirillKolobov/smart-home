@@ -101,8 +101,6 @@ async fn test_create_device() {
         "name": "Living Room Light",
         "device_type": "Light",
         "room_id": room.id,
-        "power_consumption_w": 60,
-        "is_active": true
     });
 
     let response = server
@@ -149,9 +147,7 @@ async fn test_get_device_by_id() {
     let create_device_payload = json!({
         "name": "Bedroom Thermostat",
         "device_type": "Thermostat",
-        "room_id": room.id,
-        "power_consumption_w": 10,
-        "is_active": true
+        "room_id": room.id
     });
 
     let response = server
@@ -191,9 +187,7 @@ async fn test_update_device() {
     let create_device_payload = json!({
         "name": "Old Device Name",
         "device_type": "SmartPlug",
-        "room_id": room.id,
-        "power_consumption_w": 5,
-        "is_active": true
+        "room_id": room.id
     });
 
     let response = server
@@ -204,9 +198,7 @@ async fn test_update_device() {
     let created_device: Device = response.json();
 
     let update_device_payload = json!({
-        "name": "New Device Name",
-        "power_consumption_w": 10,
-        "is_active": false
+        "name": "New Device Name"
     });
 
     let response = server
@@ -240,9 +232,7 @@ async fn test_delete_device() {
     let create_device_payload = json!({
         "name": "Device to Delete",
         "device_type": "Sensor",
-        "room_id": room.id,
-        "power_consumption_w": 1,
-        "is_active": true
+        "room_id": room.id
     });
 
     let response = server
@@ -282,9 +272,7 @@ async fn test_get_devices_by_room_id() {
     let device1_payload = json!({
         "name": "Device A",
         "device_type": "Light",
-        "room_id": room1.id,
-        "power_consumption_w": 10,
-        "is_active": true
+        "room_id": room1.id
     });
     server
         .post("/devices")
@@ -295,9 +283,7 @@ async fn test_get_devices_by_room_id() {
     let device2_payload = json!({
         "name": "Device B",
         "device_type": "SmartPlug",
-        "room_id": room1.id,
-        "power_consumption_w": 5,
-        "is_active": true
+        "room_id": room1.id
     });
     server
         .post("/devices")
@@ -309,9 +295,7 @@ async fn test_get_devices_by_room_id() {
     let device3_payload = json!({
         "name": "Device C",
         "device_type": "Sensor",
-        "room_id": room2.id,
-        "power_consumption_w": 2,
-        "is_active": true
+        "room_id": room2.id
     });
     server
         .post("/devices")

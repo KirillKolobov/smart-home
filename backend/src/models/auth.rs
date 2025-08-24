@@ -11,13 +11,11 @@ pub struct Claims {
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct LoginRequest {
-    #[validate(
-        required(message = "Email is required"),
-        email(message = "Invalid email format")
-    )]
-    pub email: Option<String>,
-    #[validate(required(message = "Password is required"))]
-    pub password: Option<String>,
+    #[validate(email(message = "Invalid email format"))]
+    #[serde(default)]
+    pub email: String,
+    #[serde(default)]
+    pub password: String,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -34,41 +32,31 @@ pub struct PasswordHash {
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct RegisterUser {
-    #[validate(
-        required(message = "First name is required"),
-        length(
-            min = 3,
-            max = 25,
-            message = "First name must be between 3 and 25 characters"
-        )
-    )]
-    pub first_name: Option<String>,
-    #[validate(
-        required(message = "Last name is required"),
-        length(
-            min = 3,
-            max = 25,
-            message = "Last name must be between 3 and 25 characters"
-        )
-    )]
-    pub last_name: Option<String>,
-    #[validate(
-        required(message = "Phone number is required"),
-        length(min = 10, max = 15, message = "Invalid phone number")
-    )]
-    pub phone: Option<String>,
-    #[validate(
-        required(message = "Email is required"),
-        email(message = "Must be a valid email address")
-    )]
-    pub email: Option<String>,
-    #[validate(
-        required(message = "Password is required"),
-        length(
-            min = 6,
-            max = 25,
-            message = "Password must be between 6 and 25 characters"
-        )
-    )]
-    pub password: Option<String>,
+    #[validate(length(
+        min = 3,
+        max = 25,
+        message = "First name must be between 3 and 25 characters"
+    ))]
+    #[serde(default)]
+    pub first_name: String,
+    #[validate(length(
+        min = 3,
+        max = 25,
+        message = "Last name must be between 3 and 25 characters"
+    ))]
+    #[serde(default)]
+    pub last_name: String,
+    #[validate(length(min = 10, max = 15, message = "Invalid phone number"))]
+    #[serde(default)]
+    pub phone: String,
+    #[validate(email(message = "Must be a valid email address"))]
+    #[serde(default)]
+    pub email: String,
+    #[validate(length(
+        min = 6,
+        max = 25,
+        message = "Password must be between 6 and 25 characters"
+    ))]
+    #[serde(default)]
+    pub password: String,
 }

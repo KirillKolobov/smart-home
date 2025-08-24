@@ -45,11 +45,11 @@ impl UserRepositoryTrait for UserRepository {
             VALUES ($1, $2, $3, $4, $5, 'user')
             RETURNING id, first_name, last_name, phone, email
             "#,
-            user.first_name.unwrap(),
-            user.last_name.unwrap(),
-            user.phone.unwrap(),
-            user.email.unwrap(),
-            user.password.unwrap()
+            user.first_name,
+            user.last_name,
+            user.phone,
+            user.email,
+            user.password
         )
         .fetch_one(&self.pool)
         .await?;
@@ -189,11 +189,11 @@ mod tests {
         let mut mock_repo = MockUserRepositoryTrait::new();
 
         let test_user = RegisterUser {
-            first_name: Some("John".to_string()),
-            last_name: Some("Doe".to_string()),
-            phone: Some("1234567890".to_string()),
-            email: Some("test@example.com".to_string()),
-            password: Some("hashedpassword".to_string()),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string(),
+            phone: "1234567890".to_string(),
+            email: "test@example.com".to_string(),
+            password: "hashedpassword".to_string(),
         };
 
         let expected_user = User {

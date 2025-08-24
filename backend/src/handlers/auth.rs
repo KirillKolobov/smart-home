@@ -114,8 +114,8 @@ mod tests {
         };
 
         let login_request = LoginRequest {
-            email: Some("test@example.com".to_string()),
-            password: Some("password123".to_string()),
+            email: "test@example.com".to_string(),
+            password: "password123".to_string(),
         };
 
         let result = login(State(state), ValidatedJson(login_request)).await;
@@ -145,8 +145,8 @@ mod tests {
         };
 
         let login_request = LoginRequest {
-            email: Some("invalid-email".to_string()), // Invalid email format
-            password: Some("password123".to_string()),
+            email: "invalid-email".to_string(), // Invalid email format
+            password: "password123".to_string(),
         };
 
         let result = login(State(state), ValidatedJson(login_request)).await;
@@ -192,11 +192,11 @@ mod tests {
         };
 
         let register_request = RegisterUser {
-            first_name: Some("John".to_string()),
-            last_name: Some("Doe".to_string()),
-            phone: Some("1234567890".to_string()),
-            email: Some("test@example.com".to_string()),
-            password: Some("password123".to_string()),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string(),
+            phone: "1234567890".to_string(),
+            email: "test@example.com".to_string(),
+            password: "password123".to_string(),
         };
 
         let result = register(State(state), ValidatedJson(register_request)).await;
@@ -236,11 +236,11 @@ mod tests {
         };
 
         let register_request = RegisterUser {
-            first_name: Some("j".to_string()),        // Too short
-            last_name: Some("D".to_string()),         // Too short
-            phone: Some("123".to_string()),           // Too short
-            email: Some("invalid-email".to_string()), // Invalid email
-            password: Some("123".to_string()),        // Too short
+            first_name: "j".to_string(),        // Too short
+            last_name: "D".to_string(),         // Too short
+            phone: "123".to_string(),           // Too short
+            email: "invalid-email".to_string(), // Invalid email
+            password: "123".to_string(),        // Too short
         };
 
         let result = register(State(state), ValidatedJson(register_request)).await;

@@ -90,14 +90,14 @@ impl AuthServiceTrait for AuthService {
         // Get user password hash
         let password_data = self
             .user_repository
-            .get_password_hash_by_email(login_request.email.as_ref().unwrap())
+            .get_password_hash_by_email(login_request.email.as_ref())
             .await
             .map_err(|_| AppError::AuthenticationError("User not found".to_string()))?;
 
         // Verify password
         if !self
             .verify_password(
-                login_request.password.as_ref().unwrap(),
+                login_request.password.as_ref(),
                 &password_data.password_hash,
             )
             .await?
@@ -129,15 +129,15 @@ impl AuthServiceTrait for AuthService {
     }
 
     async fn register(&self, register_user: RegisterUser) -> Result<User> {
-        let email = register_user.email.as_ref().unwrap();
-        let phone = register_user.phone.as_ref().unwrap();
+        let email = register_user.email.as_ref();
+        let phone = register_user.phone.as_ref();
         self.validate_unique_email_and_phone(email, phone).await?;
 
-        let password = register_user.password.as_ref().unwrap();
+        let password = register_user.password.as_ref();
         let hashed_password = self.hash_password(password).await?;
 
         let mut new_user = register_user;
-        new_user.password = Some(hashed_password);
+        new_user.password = hashed_password;
 
         let user = self.user_repository.create_user(new_user).await?;
 
@@ -228,8 +228,8 @@ mod tests {
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
         let login_request = LoginRequest {
-            email: Some("test@example.com".to_string()),
-            password: Some("password123".to_string()),
+            email: "test@example.com".to_string(),
+            password: "password123".to_string(),
         };
 
         let result = auth_service.login(login_request).await;
@@ -260,8 +260,8 @@ mod tests {
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
         let login_request = LoginRequest {
-            email: Some("test@example.com".to_string()),
-            password: Some("wrongpassword".to_string()),
+            email: "test@example.com".to_string(),
+            password: "wrongpassword".to_string(),
         };
 
         let result = auth_service.login(login_request).await;
@@ -289,8 +289,8 @@ mod tests {
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
         let login_request = LoginRequest {
-            email: Some("nonexistent@example.com".to_string()),
-            password: Some("password123".to_string()),
+            email: "nonexistent@example.com".to_string(),
+            password: "password123".to_string(),
         };
 
         let result = auth_service.login(login_request).await;
@@ -337,11 +337,11 @@ mod tests {
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
         let register_request = RegisterUser {
-            first_name: Some("John".to_string()),
-            last_name: Some("Doe".to_string()),
-            phone: Some("1234567890".to_string()),
-            email: Some("test@example.com".to_string()),
-            password: Some("password123".to_string()),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string(),
+            phone: "1234567890".to_string(),
+            email: "test@example.com".to_string(),
+            password: "password123".to_string(),
         };
 
         let result = auth_service.register(register_request).await;
@@ -386,11 +386,11 @@ mod tests {
         let auth_service = AuthService::new(config, Arc::new(mock_repo));
 
         let register_request = RegisterUser {
-            first_name: Some("John".to_string()),
-            last_name: Some("Doe".to_string()),
-            phone: Some("1234567890".to_string()),
-            email: Some("existing@example.com".to_string()),
-            password: Some("password123".to_string()),
+            first_name: "John".to_string(),
+            last_name: "Doe".to_string(),
+            phone: "1234567890".to_string(),
+            email: "existing@example.com".to_string(),
+            password: "password123".to_string(),
         };
 
         let result = auth_service.register(register_request).await;

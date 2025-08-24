@@ -21,6 +21,13 @@ impl Database {
         sqlx::query("SELECT 1").execute(&self.pool).await?;
         Ok(())
     }
+
+    #[cfg(test)]
+    pub fn new_mock() -> Self {
+        Self {
+            pool: PgPool::connect_lazy("").unwrap(),
+        }
+    }
 }
 
 #[cfg(test)]

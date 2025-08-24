@@ -225,8 +225,8 @@ mod tests {
         let address = "456 Elm St, Anytown, USA".to_string();
 
         let new_house = NewHouse {
-            name: Some(name.clone()),
-            address: Some(address.clone()),
+            name: name.clone(),
+            address: address.clone(),
         };
 
         let created_house = House {
