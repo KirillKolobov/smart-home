@@ -7,6 +7,7 @@ use axum::{
 use crate::{
     errors::{AppError, Result},
     middlewares::validator::ValidatedJson,
+    models::common::ListResponse,
     models::rooms::{NewRoom, Room},
     routes::rooms::{HouseAccess, RoomsRouterState},
     services::{house::HouseServiceTrait, rooms::RoomsServiceTrait},
@@ -19,7 +20,7 @@ use crate::{
     get,
     path = "/houses/{id}/rooms",
     responses(
-        (status = 200, description = "Rooms found", body = Vec<Room>),
+        (status = 200, description = "Rooms found", body = ListResponse<Room>),
         (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -34,7 +35,7 @@ pub async fn get_house_rooms<R, H, A>(
         house_id,
         user_id: _,
     }: HouseAccess,
-) -> Result<Json<Vec<Room>>>
+) -> Result<Json<ListResponse<Room>>>
 where
     R: RoomsServiceTrait,
     H: HouseServiceTrait,
@@ -42,7 +43,7 @@ where
 {
     let rooms = state.room_service.get_house_rooms(house_id).await?;
 
-    Ok(Json(rooms))
+    Ok(Json(ListResponse { items: rooms }))
 }
 
 /// Create new room for house
@@ -171,9 +172,9 @@ mod tests {
 
         assert!(result.is_ok());
         let Json(rooms) = result.unwrap();
-        assert_eq!(rooms.len(), 1);
-        assert_eq!(rooms[0].id, 1);
-        assert_eq!(rooms[0].name, "Living Room");
+        assert_eq!(rooms.items.len(), 1);
+        assert_eq!(rooms.items[0].id, 1);
+        assert_eq!(rooms.items[0].name, "Living Room");
     }
 
     #[tokio::test]

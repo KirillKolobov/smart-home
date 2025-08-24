@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod common;
 pub mod devices;
 pub mod houses;
 pub mod rooms;

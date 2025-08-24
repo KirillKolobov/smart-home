@@ -9,6 +9,7 @@ use axum::{
 use crate::{
     errors::{AppError, Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
+    models::common::ListResponse,
     models::devices::{CreateDevice, Device, UpdateDevice},
     routes::{devices::DeviceRouterState, rooms::HouseAccess},
 };
@@ -145,7 +146,7 @@ pub async fn delete_device(
         ("room_id" = i64, Path, description = "Room ID")
     ),
     responses(
-        (status = 200, description = "Devices found", body = Vec<Device>),
+        (status = 200, description = "Devices found", body = ListResponse<Device>),
         (status = 401, description = "Unauthorized", body = String),
         (status = 404, description = "Room not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
@@ -159,7 +160,8 @@ pub async fn get_devices_by_room_id(
     State(router_state): State<Arc<DeviceRouterState>>,
     Extension(user_id): Extension<i64>,
     Path((house_id, room_id)): Path<(i64, i64)>,
-) -> Result<Json<Vec<Device>>> {
+) -> Result<Json<ListResponse<Device>>> {
+    // Changed return type
     router_state
         .access_control_service
         .validate_house_access(house_id, user_id)
@@ -175,7 +177,7 @@ pub async fn get_devices_by_room_id(
         .device_service
         .get_devices_by_room_id(room_id)
         .await?;
-    Ok(Json(devices))
+    Ok(Json(ListResponse { items: devices }))
 }
 
 /// Get devices by house ID
@@ -188,7 +190,7 @@ pub async fn get_devices_by_room_id(
         ("house_id" = i64, Path, description = "House ID")
     ),
     responses(
-        (status = 200, description = "Devices found", body = Vec<Device>),
+        (status = 200, description = "Devices found", body = ListResponse<Device>),
         (status = 404, description = "House not found", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -203,10 +205,10 @@ pub async fn get_devices_by_house_id(
         house_id,
         user_id: _,
     }: HouseAccess,
-) -> Result<Json<Vec<Device>>> {
+) -> Result<Json<ListResponse<Device>>> {
     let devices = router_state
         .device_service
         .get_devices_by_house_id(house_id)
         .await?;
-    Ok(Json(devices))
+    Ok(Json(ListResponse { items: devices }))
 }

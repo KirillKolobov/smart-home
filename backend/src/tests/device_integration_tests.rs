@@ -10,7 +10,7 @@ use serde_json::json;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::models::{houses, rooms};
+use crate::models::{common::ListResponse, houses, rooms};
 use crate::{create_app, models::devices::Device};
 
 async fn create_test_app() -> Result<(Router, PgPool), Box<dyn std::error::Error>> {
@@ -310,10 +310,10 @@ async fn test_get_devices_by_room_id() {
         .await;
 
     assert_eq!(response.status_code(), StatusCode::OK);
-    let devices: Vec<Device> = response.json();
-    assert_eq!(devices.len(), 2);
-    assert!(devices.iter().any(|d| d.name == "Device A"));
-    assert!(devices.iter().any(|d| d.name == "Device B"));
+    let devices: ListResponse<Device> = response.json();
+    assert_eq!(devices.items.len(), 2);
+    assert!(devices.items.iter().any(|d| d.name == "Device A"));
+    assert!(devices.items.iter().any(|d| d.name == "Device B"));
 
     // Get devices for Room 2
     let response = server
@@ -322,9 +322,9 @@ async fn test_get_devices_by_room_id() {
         .await;
 
     assert_eq!(response.status_code(), StatusCode::OK);
-    let devices: Vec<Device> = response.json();
-    assert_eq!(devices.len(), 1);
-    assert!(devices.iter().any(|d| d.name == "Device C"));
+    let devices: ListResponse<Device> = response.json();
+    assert_eq!(devices.items.len(), 1);
+    assert!(devices.items.iter().any(|d| d.name == "Device C"));
 
     // Get devices for a non-existent room
     let response = server

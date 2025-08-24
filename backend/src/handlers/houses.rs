@@ -12,6 +12,8 @@ use crate::{
     services::house::HouseServiceTrait,
 };
 
+use crate::models::common::ListResponse;
+
 /// Get user houses endpoint
 ///
 /// Retrieves a list of houses associated with the authenticated user.
@@ -19,7 +21,7 @@ use crate::{
     get,
     path = "/houses",
     responses(
-        (status = 200, description = "Houses found", body = Vec<House>),
+        (status = 200, description = "Houses found", body = ListResponse<House>),
         (status = 401, description = "Unauthorized", body = String),
         (status = 500, description = "Internal Server Error", body = String)
     ),
@@ -31,10 +33,10 @@ use crate::{
 pub async fn get_user_houses(
     State(state): State<HousesRouterState>,
     Extension(user_id): Extension<i64>,
-) -> Result<Json<Vec<House>>> {
+) -> Result<Json<ListResponse<House>>> {
     let houses = state.house_service.get_user_houses(user_id).await?;
 
-    Ok(Json(houses))
+    Ok(Json(ListResponse { items: houses }))
 }
 
 /// Get house by ID endpoint
@@ -175,7 +177,7 @@ mod tests {
         assert!(result.is_ok());
         let Json(result_houses) = result.unwrap();
 
-        assert_eq!(result_houses.len(), houses.len());
+        assert_eq!(result_houses.items.len(), houses.len());
     }
 
     #[tokio::test]
