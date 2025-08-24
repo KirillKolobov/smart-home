@@ -18,3 +18,11 @@ declare module "@mui/material/Typography" {
     p1: true;
   }
 }
+
+export interface IUser {
+  email: string;
+  first_name: string;
+  id: number;
+  last_name: string;
+  phone: string;
+}

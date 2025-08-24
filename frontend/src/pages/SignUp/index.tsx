@@ -4,12 +4,43 @@ import { SignUpSteps } from "./Stepper";
 
 import { SignUpForm } from "./SignUpForm";
 import { useState } from "react";
+import { useMutation, type DefaultError } from "@tanstack/react-query";
+import type { IFormData } from "./types";
+import type { IUser } from "../../types";
 
 export const SignUpPage = () => {
   const [activeStep, setActiveStep] = useState(0);
 
   const handleChangeStep = () =>
     activeStep === 0 ? setActiveStep(1) : setActiveStep(0);
+
+  const { mutate } = useMutation<IUser, DefaultError, IFormData>({
+    mutationFn: async (arg) => {
+      const { email, first_name, last_name, password, phone } = arg;
+      const res = await fetch("http://localhost:8000/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          first_name,
+          last_name,
+          password,
+          phone,
+        }),
+      });
+
+      if (res.status === 200) {
+        const data = await res.json();
+        return data;
+      }
+
+      if (res.status === 400) {
+        throw new Error("User with this email already exists");
+      }
+    },
+  });
 
   return (
     <Container className={classes.container}>

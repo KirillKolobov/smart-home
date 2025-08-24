@@ -4,12 +4,7 @@ import { FormProvider, useForm } from "react-hook-form";
 
 import { FirstStep } from "./FirstStep";
 import { SecondStep } from "./SecondStep";
-
-interface IFormInput {
-  username: string;
-  email: string;
-  password: string;
-}
+import type { IFormData } from "../types";
 
 type SignUpFormProps = {
   activeStep: number;
@@ -20,10 +15,15 @@ export const SignUpForm = ({
   activeStep,
   handleChangeStep,
 }: SignUpFormProps) => {
-  const form = useForm<IFormInput>();
+  const form = useForm<IFormData>();
   return (
     <FormProvider {...form}>
-      <Paper className={classes.formContainer} component={"form"} elevation={0}>
+      <Paper
+        className={classes.formContainer}
+        component={"form"}
+        elevation={0}
+        onSubmit={form.handleSubmit((data) => console.log(data))}
+      >
         {activeStep === 0 ? (
           <FirstStep handleChangeStep={handleChangeStep} />
         ) : (

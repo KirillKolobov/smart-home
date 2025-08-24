@@ -48,7 +48,7 @@ export const SecondStep = ({ handleChangeStep }: SecondStepProps) => {
         >
           Назад
         </Button>
-        <Button variant="contained">Создать аккаунт</Button>
+        <Button variant="contained" type="submit">Создать аккаунт</Button>
       </Box>
     </>
   );
