@@ -17,6 +17,7 @@ pub trait UserRepositoryTrait {
     async fn get_user_by_id(&self, id: i64) -> Result<UserEntity>;
     async fn get_user_by_email(&self, email: &str) -> Result<UserEntity>;
     async fn find_by_email(&self, email: &str) -> Result<Option<UserEntity>>;
+    async fn find_by_phone(&self, phone: &str) -> Result<Option<UserEntity>>;
     async fn get_password_hash_by_email(&self, email: &str) -> Result<PasswordHash>;
     async fn delete_user(&self, id: i64) -> Result<()>;
     async fn update_last_login(&self, id: i64) -> Result<()>;
@@ -159,6 +160,22 @@ impl UserRepositoryTrait for UserRepository {
         .await?;
 
         Ok(result.exists.unwrap_or(false))
+    }
+
+    async fn find_by_phone(&self, phone: &str) -> Result<Option<UserEntity>> {
+        let result = sqlx::query_as!(
+            UserEntity,
+            r#"
+            SELECT id, first_name, last_name, phone, email, role as "role: UserRole", created_at, updated_at, last_login_at
+            FROM users
+            WHERE phone = $1
+            "#,
+            phone
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(result)
     }
 }
 

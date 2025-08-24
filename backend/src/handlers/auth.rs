@@ -29,7 +29,6 @@ pub async fn login(
     State(state): State<AuthRouterState>,
     ValidatedJson(payload): ValidatedJson<LoginRequest>,
 ) -> Result<Json<AuthResponse>> {
-    // Attempt login
     let auth_response = state.auth_service.login(payload).await?;
 
     Ok(Json(auth_response))
@@ -53,7 +52,6 @@ pub async fn register(
     State(state): State<AuthRouterState>,
     ValidatedJson(payload): ValidatedJson<RegisterUser>,
 ) -> Result<(StatusCode, Json<User>)> {
-    // Attempt registration
     let user = state.auth_service.register(payload).await?;
 
     Ok((StatusCode::CREATED, Json(user)))

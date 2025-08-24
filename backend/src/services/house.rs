@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use async_trait::async_trait;
 use mockall::automock;
+use validator::ValidationErrors;
 
 use crate::{
-    errors::Result,
+    errors::{AppError, Result},
     models::houses::{House, NewHouse},
     repositories::{user_houses_repository::UserHousesRepositoryTrait, HouseRepositoryTrait},
 };
@@ -51,6 +52,19 @@ impl HouseServiceTrait for HouseService {
     }
 
     async fn create_house(&self, user_id: i64, new_house: NewHouse) -> Result<House> {
+        let house = self
+            .house_repository
+            .find_house_by_address(new_house.address.clone())
+            .await?;
+        if house.is_some() {
+            let mut errors = ValidationErrors::new();
+            errors.add(
+                "address",
+                validator::ValidationError::new("already_exists")
+                    .with_message(Cow::from("House with this address already exists")),
+            );
+            return Err(AppError::ValidationError(errors));
+        }
         let house = self.house_repository.create_house(new_house).await?;
         let _ = self
             .user_house_repository

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use async_trait::async_trait;
 use bcrypt::{hash, verify, DEFAULT_COST};
@@ -54,16 +54,33 @@ impl AuthService {
         Ok(is_valid)
     }
 
-    async fn validate_unique_email(&self, email: &str) -> Result<()> {
-        if self.user_repository.find_by_email(email).await?.is_some() {
-            let mut errors = ValidationErrors::new();
+    async fn validate_unique_email_and_phone(&self, email: &str, phone: &str) -> Result<()> {
+        let user_with_email = self.user_repository.find_by_email(email).await?;
+        let user_with_phone = self.user_repository.find_by_phone(phone).await?;
+
+        let mut errors = ValidationErrors::new();
+
+        if user_with_email.is_some() {
             errors.add(
                 "email",
-                validator::ValidationError::new("Email already exists"),
+                validator::ValidationError::new("already_exists")
+                    .with_message(Cow::from("User with this email already exists")),
             );
-            return Err(AppError::ValidationError(errors));
         }
-        Ok(())
+
+        if user_with_phone.is_some() {
+            errors.add(
+                "phone",
+                validator::ValidationError::new("already_exists")
+                    .with_message(Cow::from("User with this phone already exists")),
+            )
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(AppError::ValidationError(errors))
+        }
     }
 }
 
@@ -113,7 +130,8 @@ impl AuthServiceTrait for AuthService {
 
     async fn register(&self, register_user: RegisterUser) -> Result<User> {
         let email = register_user.email.as_ref().unwrap();
-        self.validate_unique_email(email).await?;
+        let phone = register_user.phone.as_ref().unwrap();
+        self.validate_unique_email_and_phone(email, phone).await?;
 
         let password = register_user.password.as_ref().unwrap();
         let hashed_password = self.hash_password(password).await?;
