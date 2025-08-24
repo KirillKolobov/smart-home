@@ -233,7 +233,7 @@ mod tests {
 
         let created_house = House {
             id: 42,
-            name: name,
+            name,
             address: address.clone(),
             created_at: Utc::now(),
             updated_at: Utc::now(),

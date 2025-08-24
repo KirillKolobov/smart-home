@@ -12,3 +12,5 @@ pub mod device_repository;
 pub mod rooms_repository;
 
 pub use device_repository::{DeviceRepository, DeviceRepositoryTrait};
+pub use rooms_repository::{RoomsRepository, RoomsRepositoryTrait};
+pub use user_houses_repository::{UserHousesRepository, UserHousesRepositoryTrait};

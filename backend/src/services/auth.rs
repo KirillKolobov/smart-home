@@ -9,10 +9,7 @@ use mockall::automock;
 use crate::{
     config::Config,
     errors::{AppError, Result},
-    models::{
-        auth::{AuthResponse, Claims, LoginRequest, RegisterUser},
-        users::User,
-    },
+    models::auth::{AuthResponse, Claims, LoginRequest, RegisterUser},
     repositories::UserRepositoryTrait,
 };
 
@@ -123,10 +120,7 @@ impl AuthServiceTrait for AuthService {
             .get_user_by_id(password_data.id)
             .await?;
 
-        Ok(AuthResponse {
-            token,
-            user: User::from(user),
-        })
+        Ok(AuthResponse { token, user })
     }
 
     async fn register(&self, register_user: RegisterUser) -> Result<AuthResponse> {

@@ -28,8 +28,7 @@ impl UserService {
 #[async_trait]
 impl UserServiceTrait for UserService {
     async fn get_user_by_id(&self, id: i64) -> Result<User> {
-        let user_entity = self.user_repository.get_user_by_id(id).await?;
-        let user = User::from(user_entity);
+        let user = self.user_repository.get_user_by_id(id).await?;
 
         Ok(user)
     }

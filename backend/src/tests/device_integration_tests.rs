@@ -89,13 +89,7 @@ async fn test_create_device() {
 
     let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Device").await;
-    let room = create_room(
-        &server,
-        &token,
-        house.id.try_into().unwrap(),
-        "Test Room for Device",
-    )
-    .await;
+    let room = create_room(&server, &token, house.id, "Test Room for Device").await;
 
     let create_device_payload = json!({
         "name": "Living Room Light",
@@ -136,13 +130,7 @@ async fn test_get_device_by_id() {
 
     let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Get Device").await;
-    let room = create_room(
-        &server,
-        &token,
-        house.id.try_into().unwrap(),
-        "Test Room for Get Device",
-    )
-    .await;
+    let room = create_room(&server, &token, house.id, "Test Room for Get Device").await;
 
     let create_device_payload = json!({
         "name": "Bedroom Thermostat",
@@ -176,13 +164,7 @@ async fn test_update_device() {
 
     let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Update Device").await;
-    let room = create_room(
-        &server,
-        &token,
-        house.id.try_into().unwrap(),
-        "Test Room for Update Device",
-    )
-    .await;
+    let room = create_room(&server, &token, house.id, "Test Room for Update Device").await;
 
     let create_device_payload = json!({
         "name": "Old Device Name",
@@ -221,13 +203,7 @@ async fn test_delete_device() {
 
     let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Delete Device").await;
-    let room = create_room(
-        &server,
-        &token,
-        house.id.try_into().unwrap(),
-        "Test Room for Delete Device",
-    )
-    .await;
+    let room = create_room(&server, &token, house.id, "Test Room for Delete Device").await;
 
     let create_device_payload = json!({
         "name": "Device to Delete",
@@ -265,8 +241,8 @@ async fn test_get_devices_by_room_id() {
 
     let (token, _user_id) = register_and_login_user(&server, &pool).await;
     let house = create_house(&server, &token, "Test House for Room Devices").await;
-    let room1 = create_room(&server, &token, house.id.try_into().unwrap(), "Room 1").await;
-    let room2 = create_room(&server, &token, house.id.try_into().unwrap(), "Room 2").await;
+    let room1 = create_room(&server, &token, house.id, "Room 1").await;
+    let room2 = create_room(&server, &token, house.id, "Room 2").await;
 
     // Create devices in Room 1
     let device1_payload = json!({
