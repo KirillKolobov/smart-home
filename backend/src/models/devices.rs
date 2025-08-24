@@ -16,15 +16,14 @@ pub struct Device {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate, ToSchema)]
 pub struct CreateDevice {
-    #[validate(
-        required(message = "Name is required"),
-        length(min = 1, message = "Name cannot be empty")
-    )]
-    pub name: Option<String>,
-    #[validate(required(message = "Device type is required"))]
-    pub device_type: Option<String>,
-    #[validate(required(message = "Room is required"))]
-    pub room_id: Option<i64>,
+    #[validate(length(min = 1, message = "Name cannot be empty"))]
+    #[serde(default)]
+    pub name: String,
+    #[validate(length(min = 1, message = "Device type cannot be empty"))]
+    #[serde(default)]
+    pub device_type: String,
+    #[serde(default)]
+    pub room_id: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate, ToSchema)]

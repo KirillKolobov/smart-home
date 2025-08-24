@@ -15,8 +15,10 @@ pub struct Room {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate, Clone, PartialEq)]
 pub struct NewRoom {
-    #[validate(required(message = "Room name is required"), length(min = 3))]
-    pub name: Option<String>,
-    #[validate(required(message = "Room type is required"), length(min = 3))]
-    pub room_type: Option<String>,
+    #[validate(length(min = 3, message = "Name must be at least 3 characters"))]
+    #[serde(default)]
+    pub name: String,
+    #[validate(length(min = 3, message = "Room type must be at least 3 characters"))]
+    #[serde(default)]
+    pub room_type: String,
 }

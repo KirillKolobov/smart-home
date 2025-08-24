@@ -184,8 +184,8 @@ mod tests {
 
         let now = Utc::now();
         let new_room = NewRoom {
-            name: Some("Bedroom".to_string()),
-            room_type: Some("bedroom".to_string()),
+            name: "Bedroom".to_string(),
+            room_type: "bedroom".to_string(),
         };
 
         let room = Room {
