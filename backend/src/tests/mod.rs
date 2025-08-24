@@ -19,6 +19,7 @@ mod test_utils {
             db_pass: "1234".to_string(),
             jwt_secret: "test_secret_key_that_is_long_enough_for_jwt".to_string(),
             jwt_expires_in: 3600,
+            frontend_origin: "http://localhost:5173".to_string(),
         }
     }
 

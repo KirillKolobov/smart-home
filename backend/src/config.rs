@@ -11,6 +11,7 @@ pub struct Config {
     pub db_pass: String,
     pub jwt_secret: String,
     pub jwt_expires_in: u64,
+    pub frontend_origin: String,
 }
 
 impl Config {

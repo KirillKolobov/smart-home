@@ -3,9 +3,9 @@
 //! This library provides the core functionality for the Smart Home management system,
 //! including user authentication, device management, and API endpoints.
 
-use axum::Router;
+use axum::{http::HeaderValue, Router};
 use sqlx::postgres::PgPoolOptions;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub mod api_doc;
@@ -79,7 +79,27 @@ pub fn create_app(app_state: AppState) -> Router {
     use utoipa::OpenApi;
     use utoipa_swagger_ui::SwaggerUi;
 
-    let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any);
+    use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+    use axum::http::Method;
+
+    let cors = CorsLayer::new()
+        .allow_origin(
+            app_state
+                .config
+                .frontend_origin
+                .parse::<HeaderValue>()
+                .unwrap(),
+        )
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::PATCH,
+            Method::OPTIONS,
+        ])
+        .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
+        .allow_credentials(true);
 
     // Create protected routes that require authentication
     let protected_routes = Router::new()
@@ -104,8 +124,7 @@ pub fn create_app(app_state: AppState) -> Router {
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),
             middlewares::auth::auth_middleware,
-        ))
-        .layer(cors);
+        ));
 
     // Create main application router
     Router::new()
@@ -119,6 +138,7 @@ pub fn create_app(app_state: AppState) -> Router {
         .merge(protected_routes)
         // Health check endpoint
         .route("/health", axum::routing::get(health_check))
+        .layer(cors)
 }
 
 /// Health check endpoint
@@ -157,6 +177,7 @@ mod lib_tests {
             db_pass: "test".to_string(),
             jwt_secret: "test_secret_key_that_is_long_enough".to_string(),
             jwt_expires_in: 3600,
+            frontend_origin: "http://localhost:5173".to_string(),
         };
 
         // This would require a real database connection, so we just test the config
