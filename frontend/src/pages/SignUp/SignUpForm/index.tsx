@@ -9,11 +9,13 @@ import type { IFormData } from "../types";
 type SignUpFormProps = {
   activeStep: number;
   handleChangeStep: () => void;
+  onSubmit: (data: IFormData) => void;
 };
 
 export const SignUpForm = ({
   activeStep,
   handleChangeStep,
+  onSubmit,
 }: SignUpFormProps) => {
   const form = useForm<IFormData>();
   return (
@@ -22,7 +24,7 @@ export const SignUpForm = ({
         className={classes.formContainer}
         component={"form"}
         elevation={0}
-        onSubmit={form.handleSubmit((data) => console.log(data))}
+        onSubmit={form.handleSubmit(onSubmit)}
       >
         {activeStep === 0 ? (
           <FirstStep handleChangeStep={handleChangeStep} />

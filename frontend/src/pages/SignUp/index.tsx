@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useMutation, type DefaultError } from "@tanstack/react-query";
 import type { IFormData } from "./types";
 import type { IUser } from "../../types";
+import type { SubmitHandler } from "react-hook-form";
 
 export const SignUpPage = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -17,7 +18,7 @@ export const SignUpPage = () => {
   const { mutate } = useMutation<IUser, DefaultError, IFormData>({
     mutationFn: async (arg) => {
       const { email, first_name, last_name, password, phone } = arg;
-      const res = await fetch("http://localhost:8000/auth/signup", {
+      const res = await fetch("http://localhost:3000/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,11 +37,20 @@ export const SignUpPage = () => {
         return data;
       }
 
-      if (res.status === 400) {
-        throw new Error("User with this email already exists");
+      if (res.status === 401) {
+        throw new Error("Unauthorized");
+      }
+
+      if (res.status === 404) {
+        throw new Error("User not found");
+      }
+
+      if (res.status === 500) {
+        throw new Error("Internal Server Error");
       }
     },
   });
+  const onSubmit: SubmitHandler<IFormData> = (data) => mutate(data);
 
   return (
     <Container className={classes.container}>
@@ -58,6 +68,7 @@ export const SignUpPage = () => {
         <SignUpForm
           activeStep={activeStep}
           handleChangeStep={handleChangeStep}
+          onSubmit={onSubmit}
         />
         <Paper className={classes.securityInfo} elevation={0}>
           <Box className={classes.securityContainer}>
