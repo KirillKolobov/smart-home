@@ -1,0 +1,19 @@
+{
+  "name": "smart-home-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Root package for the Smart Home project",
+  "scripts": {
+    "dev": "concurrently \"pnpm --prefix frontend dev\" \"npm:dev:backend\"",
+    "dev:backend": "(cd backend && cargo watch -x run)",
+    "test": "pnpm --prefix frontend test && sh ./backend/scripts/test.sh all",
+    "lint": "pnpm --prefix frontend lint && sh ./backend/scripts/test.sh clippy",
+    "test:frontend": "pnpm --prefix frontend test",
+    "test:backend": "sh ./backend/scripts/test.sh all",
+    "lint:frontend": "pnpm --prefix frontend lint",
+    "lint:backend": "sh ./backend/scripts/test.sh clippy"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
