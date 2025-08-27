@@ -3,7 +3,7 @@ use crate::{
     middlewares::validator::ValidatedJson,
     models::auth::{AuthResponse, LoginRequest, RegisterUser},
     routes::auth::AuthRouterState,
-    services::AuthServiceTrait,
+    services::auth::AuthServiceTrait,
 };
 use axum::{extract::State, http::StatusCode, Json};
 

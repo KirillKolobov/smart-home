@@ -121,6 +121,10 @@ pub fn create_app(app_state: AppState) -> Router {
             "/houses/{house_id}/rooms/{room_id}/devices",
             routes::devices::room_devices_router(app_state.clone()),
         )
+        .nest(
+            "/devices/{device_id}/metrics",
+            routes::device_metrics::device_metrics_router(app_state.clone()),
+        )
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),
             middlewares::auth::auth_middleware,

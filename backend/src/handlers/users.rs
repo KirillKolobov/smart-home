@@ -1,7 +1,8 @@
 use axum::{extract::State, Extension, Json};
 
 use crate::{
-    errors::Result, models::users::User, routes::users::UserRouterState, services::UserServiceTrait,
+    errors::Result, models::users::User, routes::users::UserRouterState,
+    services::user_service::UserServiceTrait,
 };
 
 /// Get user profile by ID endpoint
