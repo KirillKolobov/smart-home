@@ -15,6 +15,13 @@ pub struct DeviceMetric {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, FromRow, ToSchema)]
+pub struct AggregatedDeviceMetric {
+    pub metric_type: String,
+    pub metric_value: f64,
+    pub unit: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Validate, ToSchema)]
 pub struct CreateDeviceMetric {
     #[serde(default)]
@@ -40,10 +47,16 @@ pub enum Aggregation {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema, IntoParams)]
+pub struct DeviceMetricAgregation {
+    pub metric_type: String,
+    pub aggregate: Aggregation,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema, IntoParams)]
 pub struct DeviceMetricFilters {
     pub from: Option<DateTime<Utc>>,
     pub to: Option<DateTime<Utc>>,
     pub unit: Option<String>,
     pub metric_type: Option<String>,
-    pub aggregate: Option<Aggregation>,
+    pub aggregate: Option<Vec<DeviceMetricAgregation>>,
 }

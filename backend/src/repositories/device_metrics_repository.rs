@@ -4,7 +4,11 @@ use sqlx::PgPool;
 
 use crate::{
     errors::Result,
-    models::device_metrics::{CreateDeviceMetric, DeviceMetric, DeviceMetricFilters},
+    models::device_metrics::{
+        Aggregation,
+        AggregatedDeviceMetric,
+        CreateDeviceMetric, DeviceMetric, DeviceMetricFilters,
+    },
 };
 
 #[automock]
@@ -16,6 +20,27 @@ pub trait DeviceMetricsRepositoryTrait {
         device_id: i64,
         filters: DeviceMetricFilters,
     ) -> Result<Vec<DeviceMetric>>;
+    async fn get_last_metrics_for_room(&self, room_id: i64) -> Result<Vec<DeviceMetric>>;
+    async fn get_metrics_for_room(
+        &self,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>>;
+    async fn get_metrics_for_house(
+        &self,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>>;
+    async fn get_aggregated_metrics_for_room(
+        &self,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>>;
+    async fn get_aggregated_metrics_for_house(
+        &self,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>>;
 }
 
 #[derive(Clone)]
@@ -81,39 +106,211 @@ impl DeviceMetricsRepositoryTrait for DeviceMetricsRepository {
             query.push_bind(metric_type);
         }
 
-        if let Some(aggregate) = filters.aggregate {
-            let mut aggregated_query =
-                sqlx::QueryBuilder::new("SELECT device_id, metric_type, unit, ");
+        let metrics = query
+            .build_query_as::<DeviceMetric>()
+            .fetch_all(&self.pool)
+            .await?;
 
-            match aggregate {
-                crate::models::device_metrics::Aggregation::Avg => {
-                    aggregated_query.push("AVG(metric_value) as metric_value");
-                }
-                crate::models::device_metrics::Aggregation::Sum => {
-                    aggregated_query.push("SUM(metric_value) as metric_value");
-                }
-                crate::models::device_metrics::Aggregation::Min => {
-                    aggregated_query.push("MIN(metric_value) as metric_value");
-                }
-                crate::models::device_metrics::Aggregation::Max => {
-                    aggregated_query.push("MAX(metric_value) as metric_value");
-                }
-            }
+        Ok(metrics)
+    }
 
-            aggregated_query.push(" FROM (");
-            aggregated_query.push(query.sql());
-            aggregated_query.push(") as sub");
-            aggregated_query.push(" GROUP BY device_id, metric_type, unit");
+    async fn get_last_metrics_for_room(&self, room_id: i64) -> Result<Vec<DeviceMetric>> {
+        let metrics = sqlx::query_as!(
+            DeviceMetric,
+            r#"
+            SELECT dm.*
+            FROM device_metrics dm
+            INNER JOIN (
+                SELECT device_id, MAX(measured_at) as max_measured_at
+                FROM device_metrics
+                GROUP BY device_id
+            ) last_metrics ON dm.device_id = last_metrics.device_id AND dm.measured_at = last_metrics.max_measured_at
+            WHERE dm.device_id IN (SELECT id FROM devices WHERE room_id = $1)
+            "#,
+            room_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
-            let metrics = aggregated_query
-                .build_query_as::<DeviceMetric>()
-                .fetch_all(&self.pool)
-                .await?;
-            return Ok(metrics);
+        Ok(metrics)
+    }
+
+    async fn get_metrics_for_room(
+        &self,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>> {
+        let mut query = sqlx::QueryBuilder::new(
+            "SELECT dm.* FROM device_metrics dm WHERE dm.device_id IN (SELECT id FROM devices WHERE room_id = ",
+        );
+        query.push_bind(room_id);
+        query.push(")");
+
+        if let Some(from) = filters.from {
+            query.push(" AND measured_at >= ");
+            query.push_bind(from);
+        }
+
+        if let Some(to) = filters.to {
+            query.push(" AND measured_at <= ");
+            query.push_bind(to);
+        }
+
+        if let Some(unit) = filters.unit {
+            query.push(" AND unit = ");
+            query.push_bind(unit);
+        }
+
+        if let Some(metric_type) = filters.metric_type {
+            query.push(" AND metric_type = ");
+            query.push_bind(metric_type);
         }
 
         let metrics = query
             .build_query_as::<DeviceMetric>()
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(metrics)
+    }
+
+    async fn get_metrics_for_house(
+        &self,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>> {
+        let mut query = sqlx::QueryBuilder::new(
+            "SELECT dm.* FROM device_metrics dm WHERE dm.device_id IN (SELECT d.id FROM devices d JOIN rooms r ON d.room_id = r.id WHERE r.house_id = ",
+        );
+        query.push_bind(house_id);
+        query.push(")");
+
+        if let Some(from) = filters.from {
+            query.push(" AND measured_at >= ");
+            query.push_bind(from);
+        }
+
+        if let Some(to) = filters.to {
+            query.push(" AND measured_at <= ");
+            query.push_bind(to);
+        }
+
+        if let Some(unit) = filters.unit {
+            query.push(" AND unit = ");
+            query.push_bind(unit);
+        }
+
+        if let Some(metric_type) = filters.metric_type {
+            query.push(" AND metric_type = ");
+            query.push_bind(metric_type);
+        }
+
+        let metrics = query
+            .build_query_as::<DeviceMetric>()
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(metrics)
+    }
+
+    async fn get_aggregated_metrics_for_room(
+        &self,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>> {
+        let mut query = sqlx::QueryBuilder::new("");
+
+        if let Some(aggregations) = filters.aggregate {
+            for (i, aggregation) in aggregations.iter().enumerate() {
+                if i > 0 {
+                    query.push(" UNION ALL ");
+                }
+                let agg_str = match aggregation.aggregate {
+                    Aggregation::Avg => "AVG(metric_value)",
+                    Aggregation::Sum => "SUM(metric_value)",
+                    Aggregation::Min => "MIN(metric_value)",
+                    Aggregation::Max => "MAX(metric_value)",
+                };
+                query.push("SELECT metric_type, unit, ");
+                query.push(agg_str);
+                query.push(" as metric_value FROM device_metrics WHERE device_id IN (SELECT id FROM devices WHERE room_id = ");
+                query.push_bind(room_id);
+                query.push(") AND metric_type = ");
+                query.push_bind(aggregation.metric_type.clone());
+
+                if let Some(from) = filters.from {
+                    query.push(" AND measured_at >= ");
+                    query.push_bind(from);
+                }
+        
+                if let Some(to) = filters.to {
+                    query.push(" AND measured_at <= ");
+                    query.push_bind(to);
+                }
+        
+                if let Some(unit) = &filters.unit {
+                    query.push(" AND unit = ");
+                    query.push_bind(unit.clone());
+                }
+
+                query.push(" GROUP BY metric_type, unit");
+            }
+        }
+
+        let metrics = query
+            .build_query_as::<AggregatedDeviceMetric>()
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(metrics)
+    }
+
+    async fn get_aggregated_metrics_for_house(
+        &self,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>> {
+        let mut query = sqlx::QueryBuilder::new("");
+
+        if let Some(aggregations) = filters.aggregate {
+            for (i, aggregation) in aggregations.iter().enumerate() {
+                if i > 0 {
+                    query.push(" UNION ALL ");
+                }
+                let agg_str = match aggregation.aggregate {
+                    Aggregation::Avg => "AVG(metric_value)",
+                    Aggregation::Sum => "SUM(metric_value)",
+                    Aggregation::Min => "MIN(metric_value)",
+                    Aggregation::Max => "MAX(metric_value)",
+                };
+                query.push("SELECT metric_type, unit, ");
+                query.push(agg_str);
+                query.push(" as metric_value FROM device_metrics WHERE device_id IN (SELECT d.id FROM devices d JOIN rooms r ON d.room_id = r.id WHERE r.house_id = ");
+                query.push_bind(house_id);
+                query.push(") AND metric_type = ");
+                query.push_bind(aggregation.metric_type.clone());
+
+                if let Some(from) = filters.from {
+                    query.push(" AND measured_at >= ");
+                    query.push_bind(from);
+                }
+        
+                if let Some(to) = filters.to {
+                    query.push(" AND measured_at <= ");
+                    query.push_bind(to);
+                }
+        
+                if let Some(unit) = &filters.unit {
+                    query.push(" AND unit = ");
+                    query.push_bind(unit.clone());
+                }
+
+                query.push(" GROUP BY metric_type, unit");
+            }
+        }
+
+        let metrics = query
+            .build_query_as::<AggregatedDeviceMetric>()
             .fetch_all(&self.pool)
             .await?;
 

@@ -6,7 +6,9 @@ use validator::Validate;
 use crate::{
     errors::Result,
     models::{
-        device_metrics::{CreateDeviceMetric, DeviceMetric, DeviceMetricFilters},
+        device_metrics::{
+            AggregatedDeviceMetric, CreateDeviceMetric, DeviceMetric, DeviceMetricFilters,
+        },
         users::User,
     },
     repositories::device_metrics_repository::DeviceMetricsRepositoryTrait,
@@ -26,6 +28,30 @@ pub trait DeviceMetricsServiceTrait {
         device_id: i64,
         filters: DeviceMetricFilters,
     ) -> Result<Vec<DeviceMetric>>;
+    async fn get_metrics_for_room(
+        &self,
+        user: &User,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>>;
+    async fn get_metrics_for_house(
+        &self,
+        user: &User,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>>;
+    async fn get_aggregated_metrics_for_room(
+        &self,
+        user: &User,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>>;
+    async fn get_aggregated_metrics_for_house(
+        &self,
+        user: &User,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>>;
 }
 
 #[derive(Clone)]
@@ -73,6 +99,62 @@ impl DeviceMetricsServiceTrait for DeviceMetricsService {
             .await?;
         self.device_metrics_repository
             .get_metrics(device_id, filters)
+            .await
+    }
+
+    async fn get_metrics_for_room(
+        &self,
+        user: &User,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>> {
+        self.access_control_service
+            .can_access_room(user, room_id)
+            .await?;
+        self.device_metrics_repository
+            .get_metrics_for_room(room_id, filters)
+            .await
+    }
+
+    async fn get_metrics_for_house(
+        &self,
+        user: &User,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<DeviceMetric>> {
+        self.access_control_service
+            .can_access_house(user, house_id)
+            .await?;
+        self.device_metrics_repository
+            .get_metrics_for_house(house_id, filters)
+            .await
+    }
+
+    async fn get_aggregated_metrics_for_room(
+        &self,
+        user: &User,
+        room_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>> {
+        self.access_control_service
+            .can_access_room(user, room_id)
+            .await?;
+        self.device_metrics_repository
+            .get_aggregated_metrics_for_room(room_id, filters)
+            .await
+    }
+
+    async fn get_aggregated_metrics_for_house(
+        &self,
+        user: &User,
+        house_id: i64,
+        filters: DeviceMetricFilters,
+    ) -> Result<Vec<AggregatedDeviceMetric>> {
+        self.access_control_service
+            .can_access_house(user, house_id)
+            .await?;
+        self.device_metrics_repository
+            .get_aggregated_metrics_for_house(house_id, filters)
             .await
     }
 }

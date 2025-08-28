@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{
+use axum::{ 
     extract::{FromRequestParts, Path},
     http::request::Parts,
     routing::{delete, get, post},
@@ -84,11 +84,14 @@ where
 }
 
 pub fn rooms_router(app_state: AppState) -> Router {
-    let rooms_router_state = RoomsRouterState::new(app_state);
+    let rooms_router_state = RoomsRouterState::new(app_state.clone());
 
     Router::new()
         .route("/", get(get_house_rooms))
         .route("/", post(create_room))
         .route("/{id}", delete(delete_room))
         .with_state(rooms_router_state)
+        .merge(crate::routes::device_metrics::device_metrics_routes(
+            app_state,
+        ))
 }

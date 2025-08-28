@@ -13,6 +13,7 @@ pub trait UserHousesRepositoryTrait {
     async fn add_house_to_user(&self, user_id: i64, house_id: i64) -> Result<UserHouse>;
     async fn user_has_access_to_house(&self, house_id: i64, user_id: i64) -> Result<bool>;
     async fn get_house_by_device_id(&self, device_id: i64) -> Result<House>;
+    async fn get_house_by_room_id(&self, room_id: i64) -> Result<House>;
 }
 
 #[derive(Clone)]
@@ -73,6 +74,23 @@ impl UserHousesRepositoryTrait for UserHousesRepository {
             WHERE d.id = $1
             "#,
             device_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(house)
+    }
+
+    async fn get_house_by_room_id(&self, room_id: i64) -> Result<House> {
+        let house = sqlx::query_as!(
+            House,
+            r#"
+            SELECT h.*
+            FROM houses h
+            JOIN rooms r ON h.id = r.house_id
+            WHERE r.id = $1
+            "#,
+            room_id
         )
         .fetch_one(&self.pool)
         .await?;

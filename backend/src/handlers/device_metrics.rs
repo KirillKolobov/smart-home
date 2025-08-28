@@ -85,3 +85,75 @@ pub async fn get_metrics(
         Ok(Json(metrics))
     }
 }
+
+/// Get device metrics for a room
+///
+/// Retrieves device metrics for a room with optional filters.
+#[utoipa::path(
+    get,
+    path = "/rooms/{room_id}/metrics",
+    params(
+        ("room_id" = i64, Path, description = "Room ID"),
+        DeviceMetricFilters
+    ),
+    responses(
+        (status = 200, description = "Device metrics found", body = Vec<DeviceMetric>),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "Room not found"),
+        (status = 500, description = "Internal Server Error")
+    ),
+    security(
+        ("bearer_auth" = [])
+    ),
+    tag = "device_metrics"
+)]
+pub async fn get_metrics_for_room(
+    State(router_state): State<Arc<DeviceMetricsRouterState>>,
+    Extension(user): Extension<User>,
+    Path(room_id): Path<i64>,
+    Query(filters): Query<DeviceMetricFilters>,
+) -> Result<Json<Vec<DeviceMetric>>> {
+    {
+        let metrics = router_state
+            .device_metrics_service
+            .get_metrics_for_room(&user, room_id, filters)
+            .await?;
+        Ok(Json(metrics))
+    }
+}
+
+/// Get device metrics for a house
+///
+/// Retrieves device metrics for a house with optional filters.
+#[utoipa::path(
+    get,
+    path = "/houses/{house_id}/metrics",
+    params(
+        ("house_id" = i64, Path, description = "House ID"),
+        DeviceMetricFilters
+    ),
+    responses(
+        (status = 200, description = "Device metrics found", body = Vec<DeviceMetric>),
+        (status = 401, description = "Unauthorized"),
+        (status = 404, description = "House not found"),
+        (status = 500, description = "Internal Server Error")
+    ),
+    security(
+        ("bearer_auth" = [])
+    ),
+    tag = "device_metrics"
+)]
+pub async fn get_metrics_for_house(
+    State(router_state): State<Arc<DeviceMetricsRouterState>>,
+    Extension(user): Extension<User>,
+    Path(house_id): Path<i64>,
+    Query(filters): Query<DeviceMetricFilters>,
+) -> Result<Json<Vec<DeviceMetric>>> {
+    {
+        let metrics = router_state
+            .device_metrics_service
+            .get_metrics_for_house(&user, house_id, filters)
+            .await?;
+        Ok(Json(metrics))
+    }
+}
