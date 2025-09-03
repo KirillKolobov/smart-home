@@ -4,6 +4,10 @@ import { InputText } from "../../../../components/InputText";
 import { InputCheckbox } from "../../../../components/InputCheckbox";
 import { useWatch } from "react-hook-form";
 import type { IFormData } from "../../types";
+import {
+  DEFAULT_MAX_LENGTH_MSG,
+  DEFAULT_REQUIRED_MSG,
+} from "../../../../constants";
 
 type SecondStepProps = {
   handleChangeStep: () => void;
@@ -22,8 +26,8 @@ export const SecondStep = ({ handleChangeStep }: SecondStepProps) => {
         label="Пароль"
         type="password"
         rules={{
-          required: "This field is required",
-          maxLength: { message: "Too many symbols", value: 20 },
+          required: DEFAULT_REQUIRED_MSG,
+          maxLength: { message: DEFAULT_MAX_LENGTH_MSG, value: 20 },
         }}
         placeholder="Минимум 8 символов"
       />
@@ -33,8 +37,8 @@ export const SecondStep = ({ handleChangeStep }: SecondStepProps) => {
         name="repeat_password"
         label="Подтвердите пароль"
         rules={{
-          required: "This field is required",
-          maxLength: { message: "Too many symbols", value: 20 },
+          required: DEFAULT_REQUIRED_MSG,
+          maxLength: { message: DEFAULT_MAX_LENGTH_MSG, value: 20 },
         }}
         placeholder="Повторите пароль"
       />

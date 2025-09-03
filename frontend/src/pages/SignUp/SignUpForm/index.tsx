@@ -6,7 +6,8 @@ import { SecondStep } from "./SecondStep";
 import type { IFormData, ServerValidationErrors } from "../types";
 import { useMutation } from "@tanstack/react-query";
 import type { IUser } from "../../../types";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
+import { signUpUser } from "../../../services/authService";
 
 type SignUpFormProps = {
   activeStep: number;
@@ -23,19 +24,7 @@ export const SignUpForm = ({
     AxiosError<ServerValidationErrors>,
     IFormData
   >({
-    mutationFn: async (arg) => {
-      const { email, first_name, last_name, password, phone } = arg;
-
-      const res = await axios.post("http://localhost:3000/auth/signup", {
-        email,
-        first_name,
-        last_name,
-        password,
-        phone,
-      });
-
-      return res.data;
-    },
+    mutationFn: signUpUser,
     onError: (error) => {
       const errors = error.response?.data.errors;
       if (errors) {

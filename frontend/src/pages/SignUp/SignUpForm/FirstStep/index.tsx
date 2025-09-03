@@ -3,6 +3,7 @@ import { Box, Button } from "@mui/material";
 import { InputText } from "../../../../components/InputText";
 import { InputTel } from "../../../../components/InputTel";
 import { useFormContext } from "react-hook-form";
+import { DEFAULT_MAX_LENGTH_MSG, DEFAULT_REQUIRED_MSG } from "../../../../constants";
 
 type FirstStepProps = {
   handleChangeStep: () => void;
@@ -26,7 +27,7 @@ export const FirstStep = ({ handleChangeStep }: FirstStepProps) => {
           name="first_name"
           label="Имя"
           rules={{
-            required: "This field is required",
+            required: DEFAULT_REQUIRED_MSG,
             maxLength: { message: "Too many symbols", value: 20 },
           }}
         />
@@ -35,7 +36,7 @@ export const FirstStep = ({ handleChangeStep }: FirstStepProps) => {
           name="last_name"
           label="Фамилия"
           rules={{
-            required: "This field is required",
+            required: DEFAULT_REQUIRED_MSG,
             maxLength: { message: "Too many symbols", value: 20 },
           }}
         />
@@ -44,7 +45,7 @@ export const FirstStep = ({ handleChangeStep }: FirstStepProps) => {
         name="email"
         label="Email адрес"
         rules={{
-          required: "This field is required",
+          required: DEFAULT_REQUIRED_MSG,
           maxLength: { message: "Too many symbols", value: 20 },
         }}
         type="email"
@@ -55,7 +56,7 @@ export const FirstStep = ({ handleChangeStep }: FirstStepProps) => {
         label="Номер телефона (опционально)"
         placeholder="+7 (XXX) XXX-XX-XX"
         rules={{
-          required: "This field is required",
+          required: DEFAULT_MAX_LENGTH_MSG,
           maxLength: { message: "Too many symbols", value: 11 },
         }}
         adornmentImg="📱"

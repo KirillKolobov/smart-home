@@ -77,12 +77,12 @@ input {
   color: #fff;
   font-size: 1rem;
   outline: none;
-  transition: border 0.2s, box-shadow 0.2s;
+  transition: border 0.2s, box-shadow 0.2s; 
   box-sizing: border-box;
 }
 
 .input:focus {
-  border-color: #10b981;
+  border-color: var(--mui-palette-success-main);
   box-shadow: 0 0 0 2px #10b98133;
 }
 
@@ -127,13 +127,13 @@ input {
 .checkbox {
   width: 16px;
   height: 16px;
-  accent-color: #10b981;
+  accent-color: var(--mui-palette-success-main);
   margin-right: 8px;
 }
 
 .forgotLink {
   font-size: 0.875rem;
-  color: #10b981;
+  color: var(--mui-palette-success-main);
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -144,7 +144,7 @@ input {
 
 .button {
   width: 100%;
-  background: #10b981;
+  background: var(--mui-palette-success-main);
   color: #fff;
   font-weight: 500;
   padding: 12px 16px;
@@ -212,7 +212,7 @@ input {
 }
 
 .signUpLink {
-  color: #10b981;
+  color: var(--mui-palette-success-main);
   font-weight: 500;
   text-decoration: none;
   transition: color 0.2s;
