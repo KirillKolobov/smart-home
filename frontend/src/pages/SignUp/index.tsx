@@ -4,15 +4,15 @@ import { SignUpSteps } from "./Stepper";
 import { SignUpForm } from "./SignUpForm";
 import { useState } from "react";
 
-const signUpStepNumber = {
-  StepOne: 0,
-  StepTwo: 1,
-} as const;
+enum SignUpStepNumber {
+  StepOne,
+  StepTwo,
+}
 
 export const SignUpPage = () => {
-  const [activeStep, setActiveStep] = useState<0 | 1>(signUpStepNumber.StepOne);
+  const [activeStep, setActiveStep] = useState(SignUpStepNumber.StepOne);
 
-  const handleChangeStep = () => setActiveStep(activeStep === 0 ? signUpStepNumber.StepTwo : signUpStepNumber.StepOne);
+  const handleChangeStep = () => setActiveStep(activeStep === SignUpStepNumber.StepOne ? SignUpStepNumber.StepTwo : SignUpStepNumber.StepOne);
 
   return (
     <Container className={classes.container}>
