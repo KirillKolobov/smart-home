@@ -6,6 +6,7 @@ import {
 } from "@mui/material";
 import classes from "./styles.module.scss";
 import { type RegisterOptions, useController } from "react-hook-form";
+import type { ReactNode } from "react";
 
 interface IProps extends BaseTextFieldProps {
   name: string;
@@ -14,7 +15,7 @@ interface IProps extends BaseTextFieldProps {
   multiline?: boolean;
   rows?: number;
   testId?: string;
-  adornmentImg?: string;
+  adornmentImg?: ReactNode;
 }
 
 export const InputText = ({

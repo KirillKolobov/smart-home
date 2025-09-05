@@ -7,6 +7,7 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SignInPage } from "./pages/SignIn";
 
 const queryClient = new QueryClient()
 
@@ -19,6 +20,7 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route element={<SignUpPage />} path="/sign-up"></Route>
+            <Route element={<SignInPage />} path="/sign-in"></Route>
           </Routes>
         </BrowserRouter>
         </QueryClientProvider>
