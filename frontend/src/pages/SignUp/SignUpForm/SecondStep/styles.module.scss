@@ -1,0 +1,15 @@
+.buttonsContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.backButton {
+  background-color: #4b5563;
+  &:hover {
+    background-color: #454a51;
+  }
+  &:active {
+    background-color: #19191a;
+  }
+}
