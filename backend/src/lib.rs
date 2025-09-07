@@ -3,7 +3,7 @@
 //! This library provides the core functionality for the Smart Home management system,
 //! including user authentication, device management, and API endpoints.
 
-use axum::{http::HeaderValue, Router};
+use axum::{http::HeaderValue, middleware, Router};
 use sqlx::postgres::PgPoolOptions;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -24,6 +24,8 @@ pub mod tests;
 
 use config::Config;
 use db::Database;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 /// Application state shared across all handlers
 #[derive(Clone)]
@@ -75,10 +77,6 @@ pub async fn run_migrations(pool: &sqlx::PgPool) -> Result<(), sqlx::migrate::Mi
 
 /// Create the main application router
 pub fn create_app(app_state: AppState) -> Router {
-    use axum::middleware;
-    use utoipa::OpenApi;
-    use utoipa_swagger_ui::SwaggerUi;
-
     use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
     use axum::http::Method;
 
@@ -120,6 +118,13 @@ pub fn create_app(app_state: AppState) -> Router {
         .nest(
             "/houses/{house_id}/rooms/{room_id}/devices",
             routes::devices::room_devices_router(app_state.clone()),
+        )
+        .merge(routes::device_metrics::device_metrics_routes(
+            app_state.clone(),
+        ))
+        .nest(
+            "/metrics",
+            routes::device_metrics::device_metrics_router(app_state.clone()),
         )
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),

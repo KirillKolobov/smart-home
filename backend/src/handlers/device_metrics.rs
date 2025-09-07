@@ -9,10 +9,7 @@ use axum::{
 use crate::{
     errors::Result,
     middlewares::validator::ValidatedJson,
-    models::{
-        device_metrics::{CreateDeviceMetric, DeviceMetric, DeviceMetricFilters},
-        users::User,
-    },
+    models::device_metrics::{CreateDeviceMetric, DeviceMetric, DeviceMetricFilters},
     routes::device_metrics::DeviceMetricsRouterState,
 };
 
@@ -21,7 +18,7 @@ use crate::{
 /// Creates a new device metric.
 #[utoipa::path(
     post,
-    path = "/devices/{device_id}/metrics",
+    path = "/metrics",
     request_body = CreateDeviceMetric,
     responses(
         (status = 201, description = "Device metric created", body = DeviceMetric),
@@ -36,15 +33,13 @@ use crate::{
 )]
 pub async fn create_metric(
     State(router_state): State<Arc<DeviceMetricsRouterState>>,
-    Extension(user): Extension<User>,
-    Path(device_id): Path<i64>,
-    ValidatedJson(mut new_metric): ValidatedJson<CreateDeviceMetric>,
+    Extension(user_id): Extension<i64>,
+    ValidatedJson(new_metric): ValidatedJson<CreateDeviceMetric>,
 ) -> Result<(StatusCode, Json<DeviceMetric>)> {
     {
-        new_metric.device_id = device_id;
         let metric = router_state
             .device_metrics_service
-            .create_metric(&user, new_metric)
+            .create_metric(user_id, new_metric)
             .await?;
         Ok((StatusCode::CREATED, Json(metric)))
     }
@@ -73,14 +68,14 @@ pub async fn create_metric(
 )]
 pub async fn get_metrics(
     State(router_state): State<Arc<DeviceMetricsRouterState>>,
-    Extension(user): Extension<User>,
+    Extension(user_id): Extension<i64>,
     Path(device_id): Path<i64>,
     Query(filters): Query<DeviceMetricFilters>,
 ) -> Result<Json<Vec<DeviceMetric>>> {
     {
         let metrics = router_state
             .device_metrics_service
-            .get_metrics(&user, device_id, filters)
+            .get_metrics(user_id, device_id, filters)
             .await?;
         Ok(Json(metrics))
     }
@@ -109,14 +104,14 @@ pub async fn get_metrics(
 )]
 pub async fn get_metrics_for_room(
     State(router_state): State<Arc<DeviceMetricsRouterState>>,
-    Extension(user): Extension<User>,
+    Extension(user_id): Extension<i64>,
     Path(room_id): Path<i64>,
     Query(filters): Query<DeviceMetricFilters>,
 ) -> Result<Json<Vec<DeviceMetric>>> {
     {
         let metrics = router_state
             .device_metrics_service
-            .get_metrics_for_room(&user, room_id, filters)
+            .get_metrics_for_room(user_id, room_id, filters)
             .await?;
         Ok(Json(metrics))
     }
@@ -145,14 +140,14 @@ pub async fn get_metrics_for_room(
 )]
 pub async fn get_metrics_for_house(
     State(router_state): State<Arc<DeviceMetricsRouterState>>,
-    Extension(user): Extension<User>,
+    Extension(user_id): Extension<i64>,
     Path(house_id): Path<i64>,
     Query(filters): Query<DeviceMetricFilters>,
 ) -> Result<Json<Vec<DeviceMetric>>> {
     {
         let metrics = router_state
             .device_metrics_service
-            .get_metrics_for_house(&user, house_id, filters)
+            .get_metrics_for_house(user_id, house_id, filters)
             .await?;
         Ok(Json(metrics))
     }

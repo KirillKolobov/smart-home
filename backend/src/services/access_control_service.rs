@@ -5,7 +5,6 @@ use mockall::automock;
 
 use crate::{
     errors::{AppError, Result},
-    models::users::User,
     repositories::user_houses_repository::UserHousesRepositoryTrait,
 };
 
@@ -13,9 +12,9 @@ use crate::{
 #[async_trait]
 pub trait AccessControlServiceTrait {
     async fn validate_house_access(&self, house_id: i64, user_id: i64) -> Result<bool>;
-    async fn can_access_device(&self, user: &User, device_id: i64) -> Result<()>;
-    async fn can_access_room(&self, user: &User, room_id: i64) -> Result<()>;
-    async fn can_access_house(&self, user: &User, house_id: i64) -> Result<()>;
+    async fn can_access_device(&self, user_id: i64, device_id: i64) -> Result<()>;
+    async fn can_access_room(&self, user_id: i64, room_id: i64) -> Result<()>;
+    async fn can_access_house(&self, user_id: i64, house_id: i64) -> Result<()>;
 }
 
 #[derive(Clone)]
@@ -43,26 +42,23 @@ impl AccessControlServiceTrait for AccessControlService {
         Ok(result)
     }
 
-    async fn can_access_device(&self, user: &User, device_id: i64) -> Result<()> {
+    async fn can_access_device(&self, user_id: i64, device_id: i64) -> Result<()> {
         let device_house = self
             .user_houses_repo
             .get_house_by_device_id(device_id)
             .await?;
-        self.validate_house_access(device_house.id, user.id).await?;
+        self.validate_house_access(device_house.id, user_id).await?;
         Ok(())
     }
 
-    async fn can_access_room(&self, user: &User, room_id: i64) -> Result<()> {
-        let room_house = self
-            .user_houses_repo
-            .get_house_by_room_id(room_id)
-            .await?;
-        self.validate_house_access(room_house.id, user.id).await?;
+    async fn can_access_room(&self, user_id: i64, room_id: i64) -> Result<()> {
+        let room_house = self.user_houses_repo.get_house_by_room_id(room_id).await?;
+        self.validate_house_access(room_house.id, user_id).await?;
         Ok(())
     }
 
-    async fn can_access_house(&self, user: &User, house_id: i64) -> Result<()> {
-        self.validate_house_access(house_id, user.id).await?;
+    async fn can_access_house(&self, user_id: i64, house_id: i64) -> Result<()> {
+        self.validate_house_access(house_id, user_id).await?;
         Ok(())
     }
 }

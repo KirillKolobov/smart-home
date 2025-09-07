@@ -5,9 +5,7 @@ use sqlx::PgPool;
 use crate::{
     errors::Result,
     models::device_metrics::{
-        Aggregation,
-        AggregatedDeviceMetric,
-        CreateDeviceMetric, DeviceMetric, DeviceMetricFilters,
+        AggregatedDeviceMetric, Aggregation, CreateDeviceMetric, DeviceMetric, DeviceMetricFilters,
     },
 };
 
@@ -242,12 +240,12 @@ impl DeviceMetricsRepositoryTrait for DeviceMetricsRepository {
                     query.push(" AND measured_at >= ");
                     query.push_bind(from);
                 }
-        
+
                 if let Some(to) = filters.to {
                     query.push(" AND measured_at <= ");
                     query.push_bind(to);
                 }
-        
+
                 if let Some(unit) = &filters.unit {
                     query.push(" AND unit = ");
                     query.push_bind(unit.clone());
@@ -294,12 +292,12 @@ impl DeviceMetricsRepositoryTrait for DeviceMetricsRepository {
                     query.push(" AND measured_at >= ");
                     query.push_bind(from);
                 }
-        
+
                 if let Some(to) = filters.to {
                     query.push(" AND measured_at <= ");
                     query.push_bind(to);
                 }
-        
+
                 if let Some(unit) = &filters.unit {
                     query.push(" AND unit = ");
                     query.push_bind(unit.clone());
