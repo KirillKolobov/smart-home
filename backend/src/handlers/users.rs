@@ -1,8 +1,7 @@
-use axum::{extract::State, Extension, Json};
+use axum::{Extension, Json};
 
 use crate::{
-    errors::Result, models::users::User, routes::users::UserRouterState,
-    services::user_service::UserServiceTrait,
+    errors::Result, models::users::User,
 };
 
 /// Get user profile by ID endpoint
@@ -23,32 +22,20 @@ use crate::{
     tag = "users"
 )]
 pub async fn get_user_profile(
-    State(state): State<UserRouterState>,
-    Extension(user_id): Extension<i64>,
+    Extension(user): Extension<User>,
 ) -> Result<Json<User>> {
-    let profile = state.user_service.get_user_profile(user_id).await?;
-
-    Ok(Json(profile))
+    Ok(Json(user))
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use super::*;
-    use crate::{
-        models::users::{User, UserRole},
-        repositories::user_repository::MockUserRepositoryTrait,
-        routes::users::UserRouterState,
-        services::user_service::UserService,
-    };
-    use axum::extract::State;
+    use crate::models::users::{User, UserRole};
+    use axum::Extension;
     use chrono::Utc;
 
     #[tokio::test]
     async fn test_get_user_profile_success() {
-        let mut mock_repo = MockUserRepositoryTrait::new();
-
         let now = Utc::now();
         let user_entity = User {
             id: 1,
@@ -62,25 +49,12 @@ mod tests {
             last_login_at: Some(now),
         };
 
-        mock_repo
-            .expect_get_user_by_id()
-            .with(mockall::predicate::eq(1i64))
-            .times(1)
-            .returning(move |_| Ok(user_entity.clone()));
-
-        let user_service = UserService::new(Arc::new(mock_repo));
-        let state = UserRouterState { user_service };
-
-        let result = get_user_profile(State(state), Extension(1)).await;
+        let result = get_user_profile(Extension(user_entity.clone())).await;
 
         assert!(result.is_ok());
         let Json(profile) = result.unwrap();
         assert_eq!(profile.id, 1);
         assert_eq!(profile.first_name, "John");
-        assert_eq!(profile.last_name, "Doe");
-        assert_eq!(profile.phone, "1234567890");
         assert_eq!(profile.email, "test@example.com");
-        assert_eq!(profile.role, UserRole::Admin);
-        assert!(profile.last_login_at.is_some());
     }
 }

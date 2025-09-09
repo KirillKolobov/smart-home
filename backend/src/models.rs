@@ -1,3 +1,4 @@
+pub mod api_tokens;
 pub mod auth;
 pub mod common;
 pub mod device_metrics;

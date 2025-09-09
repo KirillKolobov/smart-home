@@ -1,4 +1,9 @@
-use crate::{errors::AppError, models::auth::Claims, repositories::UserRepositoryTrait, AppState};
+use crate::{
+    errors::AppError,
+    models::{auth::Claims, users::User},
+    repositories::UserRepositoryTrait,
+    AppState,
+};
 use axum::{
     body::Body,
     extract::{Request, State},
@@ -12,8 +17,8 @@ use jsonwebtoken::{decode, DecodingKey, Validation};
 /// This middleware:
 /// 1. Extracts the Bearer token from the Authorization header
 /// 2. Validates the JWT token
-/// 3. Verifies the user still exists in the database
-/// 4. Adds the user_id to request extensions for use in handlers
+/// 3. Verifies the user still exists in the database and fetches the user object
+/// 4. Adds the `User` object to request extensions for use in handlers
 pub async fn auth_middleware(
     State(state): State<AppState>,
     mut req: Request<Body>,
@@ -60,9 +65,9 @@ pub async fn auth_middleware(
     let user_repository = crate::repositories::UserRepository::new(state.db.pool.clone());
 
     match user_repository.get_user_by_id(user_id).await {
-        Ok(_) => {
-            // Add user_id to request extensions for use in handlers
-            req.extensions_mut().insert(user_id);
+        Ok(user) => {
+            // Add user to request extensions for use in handlers
+            req.extensions_mut().insert(user);
             Ok(next.run(req).await)
         }
         Err(crate::errors::AppError::NotFound(_)) => Err(AppError::AuthenticationError(
@@ -74,15 +79,15 @@ pub async fn auth_middleware(
     }
 }
 
-/// Extract user ID from request extensions
+/// Extract User from request extensions
 ///
 /// This function should be called from handlers that are protected by auth middleware
-/// to get the authenticated user's ID.
-pub fn extract_user_id(req: &Request<Body>) -> Result<i64, AppError> {
+/// to get the authenticated user's object.
+pub fn extract_user(req: &Request<Body>) -> Result<User, AppError> {
     req.extensions()
-        .get::<i64>()
-        .copied()
-        .ok_or_else(|| AppError::AuthorizationError("User ID not found in request".to_string()))
+        .get::<User>()
+        .cloned()
+        .ok_or_else(|| AppError::AuthorizationError("User not found in request".to_string()))
 }
 
 // #[cfg(test)]

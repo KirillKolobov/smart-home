@@ -7,7 +7,10 @@ use axum::{
 use crate::{
     errors::{Result, ValidationErrorResponse},
     middlewares::validator::ValidatedJson,
-    models::houses::{House, NewHouse},
+    models::{
+        houses::{House, NewHouse},
+        users::User,
+    },
     routes::{houses::HousesRouterState, rooms::HouseAccess},
     services::house::HouseServiceTrait,
 };
@@ -32,9 +35,9 @@ use crate::models::common::ListResponse;
 )]
 pub async fn get_user_houses(
     State(state): State<HousesRouterState>,
-    Extension(user_id): Extension<i64>,
+    Extension(user): Extension<User>,
 ) -> Result<Json<ListResponse<House>>> {
-    let houses = state.house_service.get_user_houses(user_id).await?;
+    let houses = state.house_service.get_user_houses(user.id).await?;
 
     Ok(Json(ListResponse { items: houses }))
 }
@@ -88,10 +91,10 @@ pub async fn get_user_house_by_id(
 )]
 pub async fn create_house(
     State(state): State<HousesRouterState>,
-    Extension(user_id): Extension<i64>,
+    Extension(user): Extension<User>,
     ValidatedJson(payload): ValidatedJson<NewHouse>,
 ) -> Result<(StatusCode, Json<House>)> {
-    let house = state.house_service.create_house(user_id, payload).await?;
+    let house = state.house_service.create_house(user.id, payload).await?;
 
     Ok((StatusCode::CREATED, Json(house)))
 }
@@ -132,7 +135,7 @@ mod tests {
     use super::*;
     use crate::{
         errors::AppError,
-        models::user_houses::UserHouse,
+        models::{user_houses::UserHouse, users::UserRole},
         repositories::{
             house_repository::MockHouseRepositoryTrait,
             user_houses_repository::MockUserHousesRepositoryTrait,
@@ -172,7 +175,21 @@ mod tests {
             access_control_service,
         };
 
-        let result = get_user_houses(State(state), Extension(1)).await;
+        let result = get_user_houses(
+            State(state),
+            Extension(User {
+                id: 1,
+                first_name: "".to_string(),
+                last_name: "".to_string(),
+                created_at: Utc::now(),
+                last_login_at: None,
+                role: UserRole::User,
+                email: "".to_string(),
+                phone: "".to_string(),
+                updated_at: Utc::now(),
+            }),
+        )
+        .await;
 
         assert!(result.is_ok());
         let Json(result_houses) = result.unwrap();
@@ -273,7 +290,22 @@ mod tests {
             access_control_service,
         };
 
-        let result = create_house(State(state), Extension(1), ValidatedJson(new_house)).await;
+        let result = create_house(
+            State(state),
+            Extension(User {
+                id: 1,
+                first_name: "".to_string(),
+                last_name: "".to_string(),
+                created_at: Utc::now(),
+                last_login_at: None,
+                role: UserRole::User,
+                email: "".to_string(),
+                phone: "".to_string(),
+                updated_at: Utc::now(),
+            }),
+            ValidatedJson(new_house),
+        )
+        .await;
 
         assert!(result.is_ok());
         let (status, Json(result_house)) = result.unwrap();

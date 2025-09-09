@@ -17,3 +17,6 @@ pub use user_houses_repository::{UserHousesRepository, UserHousesRepositoryTrait
 
 pub mod device_metrics_repository;
 pub use device_metrics_repository::{DeviceMetricsRepository, DeviceMetricsRepositoryTrait};
+
+pub mod api_tokens_repository;
+pub use api_tokens_repository::{ApiTokensRepository, ApiTokensRepositoryTrait};

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{ 
+use axum::{
     extract::{FromRequestParts, Path},
     http::request::Parts,
     routing::{delete, get, post},
@@ -10,6 +10,7 @@ use axum::{
 use crate::{
     errors::AppError,
     handlers::rooms::{create_room, delete_room, get_house_rooms},
+    models::users::User,
     repositories::{
         rooms_repository::RoomsRepository, user_houses_repository::UserHousesRepository,
         HouseRepository,
@@ -64,10 +65,10 @@ where
         parts: &mut Parts,
         state: &RoomsRouterState<R, H, A>,
     ) -> Result<Self, Self::Rejection> {
-        let user_id = parts
+        let user = parts
             .extensions
-            .get::<i64>()
-            .copied()
+            .get::<User>()
+            .cloned()
             .ok_or_else(|| AppError::AuthorizationError("Not authenticated".to_string()))?;
 
         let Path(house_id) = Path::<i64>::from_request_parts(parts, state)
@@ -76,10 +77,13 @@ where
 
         state
             .access_control_service
-            .validate_house_access(house_id, user_id)
+            .validate_house_access(house_id, user.id)
             .await?;
 
-        Ok(HouseAccess { house_id, user_id })
+        Ok(HouseAccess {
+            house_id,
+            user_id: user.id,
+        })
     }
 }
 
