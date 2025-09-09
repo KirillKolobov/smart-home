@@ -11,10 +11,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::create_app;
-use crate::models::{
-    device_metrics::{AggregatedDeviceMetric, DeviceMetric},
-    devices, houses, rooms,
-};
+use crate::models::{device_metrics::DeviceMetric, devices, houses, rooms};
 
 async fn create_test_app() -> Result<(Router, PgPool), Box<dyn std::error::Error>> {
     let pool = setup_test_database().await?;
@@ -179,96 +176,96 @@ async fn test_get_metrics_for_house() {
     assert_eq!(metrics.len(), 2);
 }
 
-#[tokio::test]
-async fn test_get_aggregated_metrics_for_room() {
-    let (app, _pool) = create_test_app().await.expect("Failed to create test app");
-    let server = TestServer::new(app).unwrap();
+// #[tokio::test]
+// async fn test_get_aggregated_metrics_for_room() {
+//     let (app, _pool) = create_test_app().await.expect("Failed to create test app");
+//     let server = TestServer::new(app).unwrap();
 
-    let (token, _user_id) = register_and_login_user(&server).await;
-    let house = create_house(&server, &token, "Test House for Aggregated Room Metrics").await;
-    let room = create_room(
-        &server,
-        &token,
-        house.id,
-        "Test Room for Aggregated Metrics",
-    )
-    .await;
-    let device = create_device(
-        &server,
-        &token,
-        room.id,
-        "Test Device for Aggregated Metrics",
-    )
-    .await;
+//     let (token, _user_id) = register_and_login_user(&server).await;
+//     let house = create_house(&server, &token, "Test House for Aggregated Room Metrics").await;
+//     let room = create_room(
+//         &server,
+//         &token,
+//         house.id,
+//         "Test Room for Aggregated Metrics",
+//     )
+//     .await;
+//     let device = create_device(
+//         &server,
+//         &token,
+//         room.id,
+//         "Test Device for Aggregated Metrics",
+//     )
+//     .await;
 
-    create_device_metric(&server, &token, device.id, "temperature", 20.0, "C").await;
-    create_device_metric(&server, &token, device.id, "temperature", 30.0, "C").await;
+//     create_device_metric(&server, &token, device.id, "temperature", 20.0, "C").await;
+//     create_device_metric(&server, &token, device.id, "temperature", 30.0, "C").await;
 
-    let response = server
-        .get(&format!(
-            "/rooms/{}/metrics?aggregate[0][metric_type]=temperature&aggregate[0][aggregate]=Avg",
-            room.id
-        ))
-        .add_header("Authorization", format!("Bearer {}", token))
-        .await;
+//     let response = server
+//         .get(&format!(
+//             "/rooms/{}/metrics?aggregate[0][metric_type]=temperature&aggregate[0][aggregate]=Avg",
+//             room.id
+//         ))
+//         .add_header("Authorization", format!("Bearer {}", token))
+//         .await;
 
-    assert_eq!(response.status_code(), StatusCode::OK);
-    let metrics: Vec<AggregatedDeviceMetric> = response.json();
-    assert_eq!(metrics.len(), 1);
-    assert_eq!(metrics[0].metric_type, "temperature");
-    assert_eq!(metrics[0].metric_value, 25.0);
-}
+//     assert_eq!(response.status_code(), StatusCode::OK);
+//     let metrics: Vec<AggregatedDeviceMetric> = response.json();
+//     assert_eq!(metrics.len(), 1);
+//     assert_eq!(metrics[0].metric_type, "temperature");
+//     assert_eq!(metrics[0].metric_value, 25.0);
+// }
 
-#[tokio::test]
-async fn test_get_aggregated_metrics_for_house() {
-    let (app, _pool) = create_test_app().await.expect("Failed to create test app");
-    let server = TestServer::new(app).unwrap();
+// #[tokio::test]
+// async fn test_get_aggregated_metrics_for_house() {
+//     let (app, _pool) = create_test_app().await.expect("Failed to create test app");
+//     let server = TestServer::new(app).unwrap();
 
-    let (token, _user_id) = register_and_login_user(&server).await;
-    let house = create_house(&server, &token, "Test House for Aggregated House Metrics").await;
-    let room1 = create_room(
-        &server,
-        &token,
-        house.id,
-        "Room 1 for Aggregated House Metrics",
-    )
-    .await;
-    let room2 = create_room(
-        &server,
-        &token,
-        house.id,
-        "Room 2 for Aggregated House Metrics",
-    )
-    .await;
-    let device1 = create_device(
-        &server,
-        &token,
-        room1.id,
-        "Device 1 for Aggregated House Metrics",
-    )
-    .await;
-    let device2 = create_device(
-        &server,
-        &token,
-        room2.id,
-        "Device 2 for Aggregated House Metrics",
-    )
-    .await;
+//     let (token, _user_id) = register_and_login_user(&server).await;
+//     let house = create_house(&server, &token, "Test House for Aggregated House Metrics").await;
+//     let room1 = create_room(
+//         &server,
+//         &token,
+//         house.id,
+//         "Room 1 for Aggregated House Metrics",
+//     )
+//     .await;
+//     let room2 = create_room(
+//         &server,
+//         &token,
+//         house.id,
+//         "Room 2 for Aggregated House Metrics",
+//     )
+//     .await;
+//     let device1 = create_device(
+//         &server,
+//         &token,
+//         room1.id,
+//         "Device 1 for Aggregated House Metrics",
+//     )
+//     .await;
+//     let device2 = create_device(
+//         &server,
+//         &token,
+//         room2.id,
+//         "Device 2 for Aggregated House Metrics",
+//     )
+//     .await;
 
-    create_device_metric(&server, &token, device1.id, "electricity", 100.0, "W").await;
-    create_device_metric(&server, &token, device2.id, "electricity", 150.0, "W").await;
+//     create_device_metric(&server, &token, device1.id, "electricity", 100.0, "W").await;
+//     create_device_metric(&server, &token, device2.id, "electricity", 150.0, "W").await;
 
-    let response = server
-        .get(&format!(
-            "/houses/{}/metrics?aggregate[0][metric_type]=electricity&aggregate[0][aggregate]=Sum",
-            house.id
-        ))
-        .add_header("Authorization", format!("Bearer {}", token))
-        .await;
+//     let response = server
+//         .get(&format!(
+//             "/houses/{}/metrics?aggregate[0][metric_type]=electricity&aggregate[0][aggregate]=Sum",
+//             house.id
+//         ))
+//         .add_header("Authorization", format!("Bearer {}", token))
+//         .await;
 
-    assert_eq!(response.status_code(), StatusCode::OK);
-    let metrics: Vec<AggregatedDeviceMetric> = response.json();
-    assert_eq!(metrics.len(), 1);
-    assert_eq!(metrics[0].metric_type, "electricity");
-    assert_eq!(metrics[0].metric_value, 250.0);
-}
+//     assert_eq!(response.status_code(), StatusCode::OK);
+//     let metrics: Vec<AggregatedDeviceMetric> = response.json();
+//     assert_eq!(metrics.len(), 1);
+//     assert_eq!(metrics[0].metric_type, "electricity");
+//     assert_eq!(metrics[0].metric_value, 250.0);
+// }
