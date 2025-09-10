@@ -53,3 +53,21 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
     pub last_login_at: Option<DateTime<Utc>>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_user_role_from_string() {
+        assert_eq!(UserRole::from("admin".to_string()), UserRole::Admin);
+        assert_eq!(UserRole::from("user".to_string()), UserRole::User);
+        assert_eq!(UserRole::from("anything_else".to_string()), UserRole::User);
+    }
+
+    #[test]
+    fn test_user_role_display() {
+        assert_eq!(format!("{}", UserRole::User), "user");
+        assert_eq!(format!("{}", UserRole::Admin), "admin");
+    }
+}

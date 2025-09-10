@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use mockall::automock;
 use validator::Validate;
 
 use crate::{
@@ -9,6 +10,7 @@ use crate::{
     repositories::device_repository::DeviceRepositoryTrait,
 };
 
+#[automock]
 #[async_trait]
 pub trait DeviceServiceTrait {
     async fn create_device(&self, new_device: CreateDevice) -> Result<Device>;

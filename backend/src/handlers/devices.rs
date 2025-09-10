@@ -12,7 +12,6 @@ use crate::{
     models::{
         common::ListResponse,
         devices::{CreateDevice, Device, UpdateDevice},
-        users::User,
     },
     routes::{devices::DeviceRouterState, rooms::HouseAccess},
 };
@@ -161,13 +160,13 @@ pub async fn delete_device(
 )]
 pub async fn get_devices_by_room_id(
     State(router_state): State<Arc<DeviceRouterState>>,
-    Extension(user): Extension<User>,
+    Extension(user_id): Extension<i64>,
     Path((house_id, room_id)): Path<(i64, i64)>,
 ) -> Result<Json<ListResponse<Device>>> {
     // Changed return type
     router_state
         .access_control_service
-        .validate_house_access(house_id, user.id)
+        .validate_house_access(house_id, user_id)
         .await?;
 
     let room = router_state.room_service.get_room(room_id).await?;

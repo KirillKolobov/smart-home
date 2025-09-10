@@ -2,9 +2,8 @@ use crate::{
     errors::Result,
     models::{
         api_tokens::{CreateApiToken, NewApiToken, PublicApiToken},
-        users::User,
+        common::ListResponse,
     },
-    // This will be created in the next step
     routes::api_tokens::ApiTokensRouterState,
 };
 use axum::{
@@ -32,12 +31,12 @@ use axum::{
 )]
 pub async fn create_api_token(
     State(state): State<ApiTokensRouterState>,
-    Extension(user): Extension<User>,
+    Extension(user_id): Extension<i64>,
     Json(payload): Json<CreateApiToken>,
 ) -> Result<impl IntoResponse> {
     let new_token = state
         .tokens_service
-        .create_api_token(user.id, payload)
+        .create_api_token(user_id, payload)
         .await?;
     Ok((StatusCode::CREATED, Json(new_token)))
 }
@@ -47,7 +46,7 @@ pub async fn create_api_token(
     get,
     path = "/api/tokens",
     responses(
-        (status = 200, description = "List of API tokens", body = Vec<PublicApiToken>),
+        (status = 200, description = "List of API tokens", body = ListResponse<PublicApiToken>),
         (status = 401, description = "Unauthorized"),
         (status = 500, description = "Internal Server Error")
     ),
@@ -58,8 +57,8 @@ pub async fn create_api_token(
 )]
 pub async fn get_api_tokens(
     State(state): State<ApiTokensRouterState>,
-    Extension(user): Extension<User>,
-) -> Result<Json<Vec<PublicApiToken>>> {
-    let tokens = state.tokens_service.get_api_tokens(user.id).await?;
-    Ok(Json(tokens))
+    Extension(user_id): Extension<i64>,
+) -> Result<Json<ListResponse<PublicApiToken>>> {
+    let tokens = state.tokens_service.get_api_tokens(user_id).await?;
+    Ok(Json(ListResponse { items: tokens }))
 }

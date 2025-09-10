@@ -2,6 +2,7 @@ pub mod device_integration_tests;
 pub mod device_metrics_integration_tests;
 pub mod integration_tests;
 pub mod room_integration_tests;
+pub mod api_token_integration_tests;
 
 #[cfg(test)]
 pub use test_utils::*;

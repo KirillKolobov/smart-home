@@ -1,9 +1,4 @@
-use crate::{
-    errors::AppError,
-    models::{auth::Claims, users::User},
-    repositories::UserRepositoryTrait,
-    AppState,
-};
+use crate::{errors::AppError, models::auth::Claims, repositories::UserRepositoryTrait, AppState};
 use axum::{
     body::Body,
     extract::{Request, State},
@@ -66,8 +61,7 @@ pub async fn auth_middleware(
 
     match user_repository.get_user_by_id(user_id).await {
         Ok(user) => {
-            // Add user to request extensions for use in handlers
-            req.extensions_mut().insert(user);
+            req.extensions_mut().insert(user.id);
             Ok(next.run(req).await)
         }
         Err(crate::errors::AppError::NotFound(_)) => Err(AppError::AuthenticationError(
@@ -83,10 +77,10 @@ pub async fn auth_middleware(
 ///
 /// This function should be called from handlers that are protected by auth middleware
 /// to get the authenticated user's object.
-pub fn extract_user(req: &Request<Body>) -> Result<User, AppError> {
+pub fn extract_user(req: &Request<Body>) -> Result<i64, AppError> {
     req.extensions()
-        .get::<User>()
-        .cloned()
+        .get::<i64>()
+        .copied()
         .ok_or_else(|| AppError::AuthorizationError("User not found in request".to_string()))
 }
 

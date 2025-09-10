@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 use validator::Validate;
 
 /// Represents an API token in the database.
-#[derive(Debug, FromRow, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, FromRow, Serialize, Deserialize, ToSchema, Clone)]
 pub struct ApiToken {
     pub id: i64,
     pub user_id: i64,
