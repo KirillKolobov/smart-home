@@ -5,9 +5,11 @@ import { FirstStep } from "./FirstStep";
 import { SecondStep } from "./SecondStep";
 import type { IFormData, ServerValidationErrors } from "../types";
 import { useMutation } from "@tanstack/react-query";
-import type { IUser } from "../../../types";
 import { AxiosError } from "axios";
 import { signUpUser } from "../../../services/authService";
+import type { AuthResponse } from "../../SignIn/types";
+import { setToken } from "../../../utils/localStorage";
+import { useNavigate } from "react-router";
 
 type SignUpFormProps = {
   activeStep: number;
@@ -18,9 +20,10 @@ export const SignUpForm = ({
   activeStep,
   handleChangeStep,
 }: SignUpFormProps) => {
+  const navigate = useNavigate();
   const form = useForm<IFormData>();
   const { mutate } = useMutation<
-    IUser,
+    AuthResponse,
     AxiosError<ServerValidationErrors>,
     IFormData
   >({
@@ -32,6 +35,11 @@ export const SignUpForm = ({
           form.setError(key as keyof IFormData, { message: value });
         });
       }
+    },
+
+    onSuccess: (data) => {
+      setToken(data.token);
+      navigate("/");
     },
   });
   const onSubmit: SubmitHandler<IFormData> = (data) => mutate(data);

@@ -19,10 +19,13 @@ import {
 import { useState } from "react";
 import { InputCheckbox } from "../../../components/InputCheckbox";
 import { signInUser } from "../../../services/authService";
+import { setToken } from "../../../utils/localStorage";
+import { useNavigate } from "react-router";
 
 export const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const navigate = useNavigate();
 
   const form = useForm<IFormData>();
   const { mutate } = useMutation<
@@ -38,6 +41,10 @@ export const SignInForm = () => {
           form.setError(key as keyof IFormData, { message: value });
         });
       }
+    },
+    onSuccess: (data) => {
+      setToken(data.token);
+      navigate("/");
     },
   });
   const onSubmit: SubmitHandler<IFormData> = (data) => mutate(data);
