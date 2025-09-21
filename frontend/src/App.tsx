@@ -8,8 +8,10 @@ import {
 } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SignInPage } from "./pages/SignIn";
+import { DashboardPage } from "./pages/Dashboard";
+import { Authorized } from "./components/Authorized";
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 const App = () => {
   return (
@@ -17,12 +19,20 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<SignUpPage />} path="/sign-up"></Route>
-            <Route element={<SignInPage />} path="/sign-in"></Route>
-          </Routes>
-        </BrowserRouter>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<SignUpPage />} path="/sign-up"></Route>
+              <Route element={<SignInPage />} path="/sign-in"></Route>
+              <Route
+                element={
+                  <Authorized>
+                    <DashboardPage />
+                  </Authorized>
+                }
+                path="/"
+              ></Route>
+            </Routes>
+          </BrowserRouter>
         </QueryClientProvider>
       </ThemeProvider>
     </StyledEngineProvider>
