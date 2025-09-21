@@ -4,7 +4,7 @@ import { FormProvider, useForm, type SubmitHandler } from "react-hook-form";
 import { FirstStep } from "./FirstStep";
 import { SecondStep } from "./SecondStep";
 import type { IFormData, ServerValidationErrors } from "../types";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { signUpUser } from "../../../services/authService";
 import type { AuthResponse } from "../../SignIn/types";
@@ -20,6 +20,7 @@ export const SignUpForm = ({
   activeStep,
   handleChangeStep,
 }: SignUpFormProps) => {
+  const client = useQueryClient();
   const navigate = useNavigate();
   const form = useForm<IFormData>();
   const { mutate } = useMutation<
@@ -39,6 +40,7 @@ export const SignUpForm = ({
 
     onSuccess: (data) => {
       setToken(data.token);
+      client.setQueryData(["user"], data.user);
       navigate("/");
     },
   });
