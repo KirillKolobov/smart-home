@@ -52,7 +52,7 @@ pub struct DeviceMetricAgregation {
     pub aggregate: Aggregation,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema, IntoParams)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToSchema, IntoParams, Default)]
 pub struct DeviceMetricFilters {
     pub from: Option<DateTime<Utc>>,
     pub to: Option<DateTime<Utc>>,

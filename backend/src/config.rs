@@ -35,7 +35,10 @@ mod tests {
         env::set_var("DB_PORT", "5432");
         env::set_var("DB_USER", "test_user");
         env::set_var("DB_PASS", "test_pass");
-        env::set_var("JWT_SECRET", "supersecretjwtkeythatisatleast32characterslong");
+        env::set_var(
+            "JWT_SECRET",
+            "supersecretjwtkeythatisatleast32characterslong",
+        );
         env::set_var("JWT_EXPIRES_IN", "3600");
         env::set_var("FRONTEND_ORIGIN", "http://localhost:3000");
 
@@ -47,7 +50,10 @@ mod tests {
         assert_eq!(config.db_port, 5432);
         assert_eq!(config.db_user, "test_user");
         assert_eq!(config.db_pass, "test_pass");
-        assert_eq!(config.jwt_secret, "supersecretjwtkeythatisatleast32characterslong");
+        assert_eq!(
+            config.jwt_secret,
+            "supersecretjwtkeythatisatleast32characterslong"
+        );
         assert_eq!(config.jwt_expires_in, 3600);
         assert_eq!(config.frontend_origin, "http://localhost:3000");
 

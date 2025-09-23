@@ -36,7 +36,7 @@ impl HouseRepositoryTrait for HouseRepository {
             r#"
             INSERT INTO houses (name, address)
             VALUES ($1, $2)
-            RETURNING id, name, address, created_at, updated_at
+            RETURNING id, name, address, created_at, updated_at, type, description
             "#,
             house.name,
             house.address
@@ -51,7 +51,7 @@ impl HouseRepositoryTrait for HouseRepository {
         let result = sqlx::query_as!(
             House,
             r#"
-            SELECT id, name, address, created_at, updated_at FROM houses
+            SELECT id, name, address, created_at, updated_at, type, description FROM houses
             WHERE id = ($1)
             "#,
             id
@@ -66,7 +66,7 @@ impl HouseRepositoryTrait for HouseRepository {
         let result = sqlx::query_as!(
             House,
             r#"
-            SELECT id, name, address, created_at, updated_at
+            SELECT id, name, address, created_at, updated_at, type, description
             FROM houses h
             JOIN user_houses uh ON h.id = uh.house_id
             WHERE uh.user_id = ($1)
@@ -96,7 +96,7 @@ impl HouseRepositoryTrait for HouseRepository {
         let result = sqlx::query_as!(
             House,
             r#"
-            SELECT id, name, address, created_at, updated_at
+            SELECT id, name, address, created_at, updated_at, type, description
             FROM houses
             WHERE address = ($1)
             "#,

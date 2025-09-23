@@ -154,6 +154,8 @@ mod tests {
             address: "123 Main St, Anytown, USA".to_string(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            description: "".to_string(),
+            r#type: "apartment".to_string(),
         }];
         let user_houses = houses.clone();
 
@@ -191,6 +193,8 @@ mod tests {
             address: "123 Main St, Anytown, USA".to_string(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            description: "".to_string(),
+            r#type: "apartment".to_string(),
         };
 
         let cloned_house = house.clone();
@@ -237,6 +241,8 @@ mod tests {
             address: address.clone(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            description: "".to_string(),
+            r#type: "apartment".to_string(),
         };
 
         let user_house = UserHouse {

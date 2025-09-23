@@ -8,6 +8,8 @@ pub struct House {
     pub id: i64,
     pub name: String,
     pub address: String,
+    pub r#type: String,
+    pub description: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
