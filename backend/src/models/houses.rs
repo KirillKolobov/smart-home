@@ -22,4 +22,9 @@ pub struct NewHouse {
     #[validate(length(min = 3, message = "Address must be at least 3 characters long"))]
     #[serde(default)]
     pub address: String,
+    #[validate(length(min = 3, message = "Type must be at least 3 characters long"))]
+    #[serde(default)]
+    pub r#type: String,
+    #[serde(default)]
+    pub description: String,
 }

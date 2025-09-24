@@ -229,10 +229,14 @@ mod tests {
 
         let name = "New Test House".to_string();
         let address = "456 Elm St, Anytown, USA".to_string();
+        let description = "A new house".to_string();
+        let r#type = "apartment".to_string();
 
         let new_house = NewHouse {
             name: name.clone(),
             address: address.clone(),
+            description: description.clone(),
+            r#type: r#type.clone(),
         };
 
         let created_house = House {
@@ -241,8 +245,8 @@ mod tests {
             address: address.clone(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
-            description: "".to_string(),
-            r#type: "apartment".to_string(),
+            description: description,
+            r#type: r#type,
         };
 
         let user_house = UserHouse {
